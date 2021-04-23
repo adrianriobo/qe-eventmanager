@@ -174,9 +174,10 @@ func (c *UMBConnection) createTLSConfig() error {
 
 	// Setup HTTPS client
 	tlsConfig := &tls.Config{
-		Certificates:       []tls.Certificate{cert},
-		RootCAs:            caCertPool,
-		InsecureSkipVerify: true,
+		Certificates: []tls.Certificate{cert},
+		RootCAs:      caCertPool,
+		// ca certs is now well set
+		// InsecureSkipVerify: true,
 	}
 	c.tlsConfig = tlsConfig
 	return nil
