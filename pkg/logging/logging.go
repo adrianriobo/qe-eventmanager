@@ -2,6 +2,7 @@ package logging
 
 import (
 	"fmt"
+	"io"
 	"os"
 	"path/filepath"
 	"time"
@@ -47,9 +48,8 @@ func InitLogrus(logLevel, basePath string, fileName string) {
 	if err != nil {
 		logrus.Fatal("Unable to open log file: ", err)
 	}
-	// send logs to file
-	logrus.SetOutput(logfile)
-
+	// send logs to file and console
+	logrus.SetOutput(io.MultiWriter(logfile, os.Stdout))
 	logrus.SetLevel(logrus.DebugLevel)
 	logrus.SetFormatter(&logrus.JSONFormatter{})
 
@@ -65,6 +65,16 @@ func Info(args ...interface{}) {
 func Infof(s string, args ...interface{}) {
 	logrus.Infof(s, args...)
 }
+
+// func InfofWithFields(s string, args ...interface{}) {
+// 	logrus.Fields
+// 	logrus.WithFields()(s, args...)
+// }
+
+// log.WithFields(logrus.Fields{
+//     "animal": "walrus",
+//     "size":   10,
+//   }).Info("A group of walrus emerges from the ocean")
 
 func Warn(args ...interface{}) {
 	logrus.Warn(args...)
