@@ -22,8 +22,8 @@ import (
 	"time"
 
 	"github.com/adrianriobo/qe-eventmanager/pkg/logging"
-	"github.com/go-stomp/stomp"
-	"github.com/go-stomp/stomp/frame"
+	"github.com/go-stomp/stomp/v3"
+	"github.com/go-stomp/stomp/v3/frame"
 )
 
 type UMBConnection struct {
@@ -133,9 +133,11 @@ func (c *UMBConnection) Connect() error {
 
 	var conn *tls.Conn
 	var err error
+
 	for _, url := range c.hosts {
 		logging.Debugf("Connecting to broker")
 		conn, err = tls.Dial("tcp", url, c.tlsConfig)
+
 		if err == nil {
 			logging.Infof("Established TCP connection to broker")
 			break
@@ -189,11 +191,10 @@ func (c *UMBConnection) createTLSConfig() error {
 
 	// Setup HTTPS client
 	tlsConfig := &tls.Config{
-		Certificates: []tls.Certificate{cert},
-		RootCAs:      caCertPool,
+		Certificates:       []tls.Certificate{cert},
+		RootCAs:            caCertPool,
+		InsecureSkipVerify: true,
 	}
-	// TODO deprecated
-	// tlsConfig.BuildNameToCertificate()
 	c.tlsConfig = tlsConfig
 	return nil
 }
