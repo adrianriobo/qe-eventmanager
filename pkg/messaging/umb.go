@@ -1,16 +1,3 @@
-/*
-Package UMB provides a simplified way to connect to Unified Message Bus (UMB)
-using SSL client certs and failver over STOMP protocol.
-
-Primary reasons for its existence:
- * Enforced 'application/json' content type
- * SSL cert loading and TLS connection is a bit convoluted
- * go-stomp does not support failover for JBoss AMQ servers
-
-Ideally it should probably be mostly merged into go-stomp one day
-
-*/
-
 package messaging
 
 import (
@@ -27,12 +14,8 @@ import (
 )
 
 type UMBConnection struct {
-	// count of retry until Failover* function fail
 	FailoverRetryCount uint
-	// delay between reconnects
 	FailoverRetryDelay float32
-	// real delay = retry delay counter * FailoverRetryDelay
-	// first retry is without delay and next delays are longer and longer
 
 	ssl_cert_path string
 	ssl_key_path  string
@@ -59,6 +42,45 @@ func NewUMBConnection(sslCertPath, sslKeyPath, sslCaPath string, hosts []string,
 		FailoverRetryCount: DefaultFailoverRetryCount,
 		FailoverRetryDelay: DefaultFailoverRetryDelay,
 	}
+}
+
+func (c *UMBConnection) Connect() error {
+	if c.tlsConfig == nil {
+		err := c.createTLSConfig()
+		if err != nil {
+			return errors.New("Failed to load SSL certificates: " + err.Error())
+		}
+
+	}
+
+	var conn *tls.Conn
+	var err error
+
+	for _, url := range c.hosts {
+		logging.Debugf("Connecting to broker")
+		conn, err = tls.Dial("tcp", url, c.tlsConfig)
+
+		if err == nil {
+			logging.Infof("Established TCP connection to broker")
+			break
+		}
+		// log.WithField("broker", url).Warning("Connection to broker failed: %s", err.Error())
+	}
+	if err != nil {
+		return errors.New("Failed tcp broker connection: " + err.Error())
+	}
+
+	// disable heartbeat since it actually just makes us disconnect
+	// see: https://github.com/go-stomp/stomp/issues/32
+	// remove or set to short time to test failover :-)
+	opts := append(c.connOpts, stomp.ConnOpt.HeartBeat(0, 0))
+	stompConn, err := stomp.Connect(conn, opts...)
+	if err != nil {
+		return errors.New("Failed stomp connection: " + err.Error())
+	}
+	c.tlsConn = conn
+	c.stompConn = stompConn
+	return nil
 }
 
 func (c *UMBConnection) FailoverSend(destination string, body interface{}, opts ...func(*frame.Frame) error) error {
@@ -120,45 +142,6 @@ func (c *UMBConnection) FailoverSubscribe(destination string, ack stomp.AckMode,
 	}
 
 	return sub, err
-}
-
-func (c *UMBConnection) Connect() error {
-	if c.tlsConfig == nil {
-		err := c.createTLSConfig()
-		if err != nil {
-			return errors.New("Failed to load SSL certificates: " + err.Error())
-		}
-
-	}
-
-	var conn *tls.Conn
-	var err error
-
-	for _, url := range c.hosts {
-		logging.Debugf("Connecting to broker")
-		conn, err = tls.Dial("tcp", url, c.tlsConfig)
-
-		if err == nil {
-			logging.Infof("Established TCP connection to broker")
-			break
-		}
-		// log.WithField("broker", url).Warning("Connection to broker failed: %s", err.Error())
-	}
-	if err != nil {
-		return errors.New("Failed tcp broker connection: " + err.Error())
-	}
-
-	// disable heartbeat since it actually just makes us disconnect
-	// see: https://github.com/go-stomp/stomp/issues/32
-	// remove or set to short time to test failover :-)
-	opts := append(c.connOpts, stomp.ConnOpt.HeartBeat(0, 0))
-	stompConn, err := stomp.Connect(conn, opts...)
-	if err != nil {
-		return errors.New("Failed stomp connection: " + err.Error())
-	}
-	c.tlsConn = conn
-	c.stompConn = stompConn
-	return nil
 }
 
 func (c *UMBConnection) Disconnect() {
