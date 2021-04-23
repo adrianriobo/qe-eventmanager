@@ -3,8 +3,10 @@ package logging
 import (
 	"fmt"
 	"os"
+	"path/filepath"
 	"time"
 
+	"github.com/adrianriobo/qe-eventmanager/pkg/util"
 	"github.com/sirupsen/logrus"
 )
 
@@ -14,8 +16,13 @@ var (
 	originalHooks = logrus.LevelHooks{}
 )
 
-func OpenLogFile(path string) (*os.File, error) {
-	logFile, err := os.OpenFile(path, os.O_WRONLY|os.O_APPEND|os.O_CREATE, 0600)
+func OpenLogFile(basePath string, fileName string) (*os.File, error) {
+	if err := util.EnsureBaseDirectoriesExist(basePath); err != nil {
+		return nil, err
+	}
+	logFile, err := os.OpenFile(
+		filepath.Join(basePath, fileName),
+		os.O_WRONLY|os.O_APPEND|os.O_CREATE, 0600)
 	if err != nil {
 		return nil, err
 	}
@@ -34,16 +41,16 @@ func BackupLogFile() {
 	os.Rename(logfile.Name(), fmt.Sprintf("%s_%s", logfile.Name(), time.Now().Format("20060102150405"))) // nolint
 }
 
-func InitLogrus(logLevel, logFilePath string) {
+func InitLogrus(logLevel, basePath string, fileName string) {
 	var err error
-	logfile, err = OpenLogFile(logFilePath)
+	logfile, err = OpenLogFile(basePath, fileName)
 	if err != nil {
 		logrus.Fatal("Unable to open log file: ", err)
 	}
 	// send logs to file
 	logrus.SetOutput(logfile)
 
-	logrus.SetLevel(logrus.InfoLevel)
+	logrus.SetLevel(logrus.DebugLevel)
 	logrus.SetFormatter(&logrus.JSONFormatter{})
 
 	for k, v := range logrus.StandardLogger().Hooks {

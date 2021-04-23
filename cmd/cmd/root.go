@@ -23,9 +23,8 @@ const (
 )
 
 var (
-	baseDir     = filepath.Join(util.GetHomeDir(), ".qe-eventmanager")
-	logFile     = "qe-eventmanager.log"
-	logFilePath = filepath.Join(baseDir, logFile)
+	baseDir = filepath.Join(util.GetHomeDir(), ".qe-eventmanager")
+	logFile = "qe-eventmanager.log"
 )
 
 var rootCmd = &cobra.Command{
@@ -44,8 +43,7 @@ var rootCmd = &cobra.Command{
 }
 
 func runPrerun(cmd *cobra.Command) error {
-	logFile := logFilePath
-	logging.InitLogrus(logging.LogLevel, logFile)
+	logging.InitLogrus(logging.LogLevel, baseDir, logFile)
 	return nil
 }
 
