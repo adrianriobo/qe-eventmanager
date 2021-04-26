@@ -24,8 +24,7 @@ func New(connection *messaging.UMBConnection) *ProductScenarioBuild {
 }
 
 func (p *ProductScenarioBuild) Init() {
-	// this should be change to ack msg to ack when handle is done to avoid data loss
-	p.subscription, _ = p.connection.FailoverSubscribe("Consumer.psi-crcqe-openstack.test5."+topic, stomp.AckClientIndividual)
+	p.subscription, _ = p.connection.FailoverSubscribe("Consumer.psi-crcqe-openstack.ID."+topic, stomp.AckClientIndividual)
 	// group of consumers
 	p.consumers = &sync.WaitGroup{}
 	// group of handlers
