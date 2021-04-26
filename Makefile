@@ -4,6 +4,7 @@ CONTAINER_MANAGER ?= podman
 IMG ?= quay.io/ariobolo/qe-eventmanager:v${VERSION}
 
 # Go and compilation related variables
+GOPATH ?= $(shell go env GOPATH)
 BUILD_DIR ?= out
 SOURCE_DIRS = cmd pkg test
 # https://golang.org/cmd/link/
