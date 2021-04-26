@@ -9,15 +9,15 @@ import (
 	"github.com/adrianriobo/qe-eventmanager/pkg/messaging"
 )
 
-type AMQPManager struct {
+type Client struct {
 	certificateFile string
 	privateKeyFile  string
 	caCertsFile     string
 	brokers         []string
 }
 
-func New(certificateFile, privateKeyFile, caCertsFile string, brokers []string) *AMQPManager {
-	return &AMQPManager{
+func New(certificateFile, privateKeyFile, caCertsFile string, brokers []string) *Client {
+	return &Client{
 		certificateFile: certificateFile,
 		privateKeyFile:  privateKeyFile,
 		caCertsFile:     caCertsFile,
@@ -25,25 +25,29 @@ func New(certificateFile, privateKeyFile, caCertsFile string, brokers []string) 
 	}
 }
 
-func (a AMQPManager) Run() {
+func (c Client) Run() {
 	connection := messaging.NewUMBConnection(
-		a.certificateFile,
-		a.privateKeyFile,
-		a.caCertsFile,
-		a.brokers)
+		c.certificateFile,
+		c.privateKeyFile,
+		c.caCertsFile,
+		c.brokers)
 	if err := connection.Connect(); err != nil {
 		logging.Error(err)
 		os.Exit(0)
 	}
 	productScenarioBuild := ocp.New(connection)
 	productScenarioBuild.Init()
-	c := make(chan os.Signal, 1)
-	signal.Notify(c, os.Interrupt)
-	<-c
+	waitForStop()
 	// Consumers routine should end gracefully to avoid data losing
 	// Handlers routines generated should end gracefully to avoid data losing
 	productScenarioBuild.Finish()
 	connection.Disconnect()
 	logging.Info("Event manager was gracefully stopped. Enjoy your day!")
 	os.Exit(0)
+}
+
+func waitForStop() {
+	s := make(chan os.Signal, 1)
+	signal.Notify(s, os.Interrupt)
+	<-s
 }
