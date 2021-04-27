@@ -1,16 +1,32 @@
-package ocp
+package data
 
-type Event struct {
-	Message Message `json:"message"`
-	Topic   string  `json:"topic"`
-}
-
-type Message struct {
+type BuildComplete struct {
+	Artifact   Artifact `json:"artififact"`
 	Contact    Contact  `json:"contact"`
 	GenerateAt string   `json:"generated_at"`
-	Version    string   `json:"version"`
-	Artifact   Artifact `json:"artififact"`
 	System     []System `json:"system"`
+	Version    string   `json:"version"`
+}
+
+type TestComplete struct {
+	Contact    Contact  `json:"contact"`
+	Run        Run      `json:"run"`
+	Artifact   Artifact `json:"artififact"`
+	Test       Test     `json:"test"`
+	GenerateAt string   `json:"generated_at"`
+	System     []System `json:"system"`
+	Version    string   `json:"version"`
+}
+
+type TestError struct {
+	Contact    Contact  `json:"contact"`
+	Run        Run      `json:"run"`
+	Artifact   Artifact `json:"artififact"`
+	Test       Test     `json:"test"`
+	Error      Error    `json:"error"`
+	GenerateAt string   `json:"generated_at"`
+	System     []System `json:"system"`
+	Version    string   `json:"version"`
 }
 
 type Contact struct {
@@ -49,4 +65,22 @@ type System struct {
 	Architecture string `json:"architecture"`
 	Provider     string `json:"provider"`
 	OS           string `json:"os"`
+}
+
+type Run struct {
+	URL string `json:"url"`
+	Log string `json:"log"`
+}
+
+type Test struct {
+	Category  string   `json:"category"`
+	Namespace string   `json:"namespace"`
+	TestType  string   `json:"type"`
+	Result    string   `json:"result"`
+	Runtime   string   `json:"runtime"`
+	XunitUrls []string `json:"xunit_urls"`
+}
+
+type Error struct {
+	Reason string `json:"reason"`
 }

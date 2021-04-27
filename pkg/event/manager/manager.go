@@ -4,9 +4,9 @@ import (
 	"os"
 	"os/signal"
 
-	"github.com/adrianriobo/qe-eventmanager/pkg/event/interop/ocp"
+	"github.com/adrianriobo/qe-eventmanager/pkg/event/interop/manager/ocp"
 	"github.com/adrianriobo/qe-eventmanager/pkg/logging"
-	"github.com/adrianriobo/qe-eventmanager/pkg/messaging"
+	messaging "github.com/adrianriobo/qe-eventmanager/pkg/services/messaging/umb"
 )
 
 type Client struct {
