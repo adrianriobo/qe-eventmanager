@@ -1,4 +1,4 @@
-package data
+package ocp
 
 type BuildComplete struct {
 	Artifact   Artifact `json:"artififact"`

@@ -7,7 +7,7 @@ import (
 	"github.com/spf13/pflag"
 	"github.com/spf13/viper"
 
-	"github.com/adrianriobo/qe-eventmanager/pkg/event/manager"
+	"github.com/adrianriobo/qe-eventmanager/pkg/manager"
 )
 
 const (
@@ -15,6 +15,7 @@ const (
 	certificateFile string = "certificate-file"
 	privateKeyFile  string = "private-key-file"
 	caCertsFile     string = "ca-certs"
+	kubeconfigPath  string = "kubeconfigPath"
 )
 
 func init() {
@@ -24,6 +25,7 @@ func init() {
 	flagSet.StringP(certificateFile, "", "", "certificate file for client auth")
 	flagSet.StringP(privateKeyFile, "", "", "key file for client auth")
 	flagSet.StringP(caCertsFile, "", "", "root ca for messageing server auth")
+	flagSet.StringP(kubeconfigPath, "k", "", "kubeconfig file path")
 	startCmd.Flags().AddFlagSet(flagSet)
 }
 
@@ -45,6 +47,7 @@ func runStart() {
 		viper.GetString(certificateFile),
 		viper.GetString(privateKeyFile),
 		viper.GetString(caCertsFile),
+		viper.GetString(kubeconfigPath),
 		strings.Split(viper.GetString(brokers), ",")).
 		Run()
 }

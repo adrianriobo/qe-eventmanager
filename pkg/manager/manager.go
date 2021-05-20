@@ -4,9 +4,10 @@ import (
 	"os"
 	"os/signal"
 
-	"github.com/adrianriobo/qe-eventmanager/pkg/event/interop/manager/ocp"
-	"github.com/adrianriobo/qe-eventmanager/pkg/logging"
-	messaging "github.com/adrianriobo/qe-eventmanager/pkg/services/messaging/umb"
+	"github.com/adrianriobo/qe-eventmanager/pkg/event/interop/ocp"
+	"github.com/adrianriobo/qe-eventmanager/pkg/services/ci/pipelines"
+	"github.com/adrianriobo/qe-eventmanager/pkg/util/logging"
+	umb "github.com/adrianriobo/qe-eventmanager/pkg/util/umb"
 )
 
 type Client struct {
@@ -16,7 +17,13 @@ type Client struct {
 	brokers         []string
 }
 
-func New(certificateFile, privateKeyFile, caCertsFile string, brokers []string) *Client {
+func New(certificateFile, privateKeyFile, caCertsFile, kubeconfigPath string, brokers []string) *Client {
+	// Start pipeline client
+	if err := pipelines.NewClient(kubeconfigPath); err != nil {
+		logging.Error(err)
+		os.Exit(1)
+	}
+	// Start umb client
 	return &Client{
 		certificateFile: certificateFile,
 		privateKeyFile:  privateKeyFile,
@@ -26,7 +33,7 @@ func New(certificateFile, privateKeyFile, caCertsFile string, brokers []string) 
 }
 
 func (c Client) Run() {
-	connection := messaging.NewUMBConnection(
+	connection := umb.NewUMBConnection(
 		c.certificateFile,
 		c.privateKeyFile,
 		c.caCertsFile,

@@ -8,7 +8,7 @@ import (
 	"io/ioutil"
 	"time"
 
-	"github.com/adrianriobo/qe-eventmanager/pkg/logging"
+	"github.com/adrianriobo/qe-eventmanager/pkg/util/logging"
 	"github.com/go-stomp/stomp/v3"
 	"github.com/go-stomp/stomp/v3/frame"
 )

@@ -8,8 +8,8 @@ import (
 	"path/filepath"
 	"strings"
 
-	"github.com/adrianriobo/qe-eventmanager/pkg/logging"
 	"github.com/adrianriobo/qe-eventmanager/pkg/util"
+	"github.com/adrianriobo/qe-eventmanager/pkg/util/logging"
 	"github.com/spf13/cobra"
 	"k8s.io/utils/exec"
 )

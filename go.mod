@@ -16,6 +16,7 @@ require (
 	github.com/tektoncd/pipeline v0.23.0
 	golang.org/x/crypto v0.0.0-20210220033148-5ea612d1eb83
 	google.golang.org/appengine v1.6.7
+	k8s.io/api v0.21.0
 	k8s.io/apimachinery v0.21.0
 	k8s.io/client-go v0.21.0
 	k8s.io/component-base v0.21.0
