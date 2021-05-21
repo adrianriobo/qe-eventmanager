@@ -15,8 +15,8 @@ const (
 	correlationParamName string = "correlation"
 )
 
-func Run(ocpVersion, correlation string) (*v1beta1.PipelineRunStatus, error) {
-	pipelinerun, err := pipelines.CreatePipelinerun(crcNamespace, getSpec(ocpVersion, correlation))
+func RunInteropOCP(ocpVersion, correlation string) (*v1beta1.PipelineRunStatus, error) {
+	pipelinerun, err := pipelines.CreatePipelinerun(crcNamespace, getSpecInteropOCP(ocpVersion, correlation))
 	if err != nil {
 		return nil, err
 	}
@@ -29,7 +29,7 @@ func Run(ocpVersion, correlation string) (*v1beta1.PipelineRunStatus, error) {
 	return result, nil
 }
 
-func getSpec(ocpVersion, correlation string) *v1beta1.PipelineRun {
+func getSpecInteropOCP(ocpVersion, correlation string) *v1beta1.PipelineRun {
 	return &v1beta1.PipelineRun{
 		TypeMeta:   v1.TypeMeta{},
 		ObjectMeta: v1.ObjectMeta{GenerateName: pipelineRunName, Namespace: crcNamespace},

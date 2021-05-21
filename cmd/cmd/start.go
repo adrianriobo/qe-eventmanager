@@ -43,11 +43,10 @@ var startCmd = &cobra.Command{
 }
 
 func runStart() {
-	manager.New(
+	manager.Initialize(
 		viper.GetString(certificateFile),
 		viper.GetString(privateKeyFile),
 		viper.GetString(caCertsFile),
 		viper.GetString(kubeconfigPath),
-		strings.Split(viper.GetString(brokers), ",")).
-		Run()
+		strings.Split(viper.GetString(brokers), ","))
 }

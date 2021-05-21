@@ -22,6 +22,8 @@ type Client struct {
 	subscriptions []*stomp.Subscription
 	consumers     *sync.WaitGroup
 	handlers      *sync.WaitGroup
+	subscribe     sync.Mutex
+	send          sync.Mutex
 }
 
 var client Client
@@ -44,8 +46,10 @@ func NewClient(certificateFile, privateKeyFile, caCertsFile string, brokers []st
 }
 
 // TODO add selector based on regex??
-func Subscribe(virtualTopic string, handler func(event interface{})) error {
+func Subscribe(virtualTopic string, handler func(event interface{}) error) error {
 	destination := consumerId + virtualTopic
+	client.subscribe.Lock()
+	defer client.subscribe.Unlock()
 	subscription, err := client.connection.FailoverSubscribe(destination, defaultACKMode)
 	if err != nil {
 		return err
@@ -56,7 +60,13 @@ func Subscribe(virtualTopic string, handler func(event interface{})) error {
 	return nil
 }
 
-func consume(subscription *stomp.Subscription, handler func(event interface{})) {
+func Send(destination string, message interface{}) error {
+	client.send.Lock()
+	defer client.send.Unlock()
+	return client.connection.FailoverSend("/topic/"+destination, message)
+}
+
+func consume(subscription *stomp.Subscription, handler func(event interface{}) error) {
 	defer client.consumers.Done()
 	for subscription.Active() {
 		msg, err := subscription.Read()
@@ -72,7 +82,7 @@ func consume(subscription *stomp.Subscription, handler func(event interface{})) 
 	}
 }
 
-func handle(msg *stomp.Message, handler func(event interface{})) {
+func handle(msg *stomp.Message, handler func(event interface{}) error) {
 	// when finish remove from group
 	defer client.handlers.Done()
 	// heavy consuming may regex over string
@@ -81,7 +91,9 @@ func handle(msg *stomp.Message, handler func(event interface{})) {
 	if err := json.Unmarshal(msg.Body, &event); err != nil {
 		logging.Error(err)
 	}
-	handler(event)
+	if err := handler(event); err != nil {
+		logging.Error(err)
+	}
 }
 
 func GracefullShutdown() {
@@ -93,4 +105,5 @@ func GracefullShutdown() {
 		client.consumers.Done()
 	}
 	client.handlers.Wait()
+	client.connection.Disconnect()
 }
