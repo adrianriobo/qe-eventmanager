@@ -21,12 +21,11 @@ func RunInteropOCP(ocpVersion, correlation string) (*v1beta1.PipelineRunStatus, 
 		return nil, err
 	}
 	status := make(chan *v1beta1.PipelineRunStatus)
+	informerStopper := make(chan struct{})
 	defer close(status)
-	if err := pipelines.AddInformer(crcNamespace, pipelinerun.GetName(), status); err != nil {
-		return nil, err
-	}
-	result := <-status
-	return result, nil
+	defer close(informerStopper)
+	go pipelines.AddInformer(crcNamespace, pipelinerun.GetName(), status, informerStopper)
+	return <-status, nil
 }
 
 func getSpecInteropOCP(ocpVersion, correlation string) *v1beta1.PipelineRun {

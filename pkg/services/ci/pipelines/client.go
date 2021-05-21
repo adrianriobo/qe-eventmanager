@@ -3,7 +3,9 @@ package pipelines
 import (
 	"context"
 	"fmt"
+	"time"
 
+	"github.com/adrianriobo/qe-eventmanager/pkg/util/logging"
 	v1beta1 "github.com/tektoncd/pipeline/pkg/apis/pipeline/v1beta1"
 	clientset "github.com/tektoncd/pipeline/pkg/client/clientset/versioned"
 	informers "github.com/tektoncd/pipeline/pkg/client/informers/externalversions/pipeline/v1beta1"
@@ -46,24 +48,25 @@ func CreatePipelinerun(namespace string, spec *v1beta1.PipelineRun) (*v1beta1.Pi
 
 // DESIGN best approach one informer per run or one informer and some async mechanism from there
 // when we get the status result on the generated pipelinerun we can close the informer
-func AddInformer(namespace, pipelinerunName string, status chan *v1beta1.PipelineRunStatus) error {
+func AddInformer(namespace, pipelinerunName string, status chan *v1beta1.PipelineRunStatus, informerStopper chan struct{}) {
 	if err := checkInitialization(); err != nil {
-		return err
+		logging.Error(err)
 	}
-	informerStopper := make(chan struct{})
-	defer close(informerStopper)
 	// https://github.com/kubernetes-client/java/issues/725
-	informer := informers.NewFilteredPipelineRunInformer(client, namespace, 0, nil, nil)
+	informer := informers.NewPipelineRunInformer(client, namespace, 2*time.Minute, nil)
 	informer.AddEventHandler(cache.ResourceEventHandlerFuncs{UpdateFunc: func(oldObj, newObj interface{}) {
-		pipelineRun := newObj.(*v1beta1.PipelineRun)
-		if pipelineRun.GetName() == pipelinerunName && pipelineRun.IsDone() {
+		pipelineRun, ok := newObj.(*v1beta1.PipelineRun)
+		if !ok {
+			logging.Error("error formatting pipelinerun")
+		}
+		logging.Debugf("Change on pipelinerun %s", pipelineRun.GetName())
+		if pipelineRun.GetName() == pipelinerunName &&
+			(pipelineRun.IsDone() || pipelineRun.IsCancelled() || pipelineRun.IsTimedOut()) {
 			// Send the status of the pipelinerun when is done
 			status <- &pipelineRun.Status
-			close(informerStopper)
 		}
 	}})
 	informer.Run(informerStopper)
-	return nil
 }
 
 func checkInitialization() error {

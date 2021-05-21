@@ -1,7 +1,7 @@
 package ocp
 
 import (
-	"fmt"
+	"github.com/mitchellh/mapstructure"
 
 	"github.com/adrianriobo/qe-eventmanager/pkg/crc/pipelines"
 	"github.com/adrianriobo/qe-eventmanager/pkg/services/messaging/umb"
@@ -26,9 +26,10 @@ func (p ProductScenarioBuild) GetDestination() string {
 	return buildComplete
 }
 func (p ProductScenarioBuild) Handler(event interface{}) error {
-	data, ok := event.(BuildComplete)
-	if !ok {
-		return fmt.Errorf("wrong message to be processed")
+	var data BuildComplete
+
+	if err := mapstructure.Decode(event, &data); err != nil {
+		return err
 	}
 	// Business Logic
 	for _, product := range data.Artifact.Products {

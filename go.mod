@@ -7,6 +7,7 @@ require (
 	github.com/go-stomp/stomp/v3 v3.0.0
 	github.com/golangci/golangci-lint v1.39.0 // indirect
 	github.com/hjson/hjson-go v3.1.0+incompatible
+	github.com/mitchellh/mapstructure v1.1.2
 	github.com/openshift/api v0.0.0-20210422150128-d8a48168c81c
 	github.com/openshift/client-go v0.0.0-20210422153130-25c8450d1535
 	github.com/sirupsen/logrus v1.8.1

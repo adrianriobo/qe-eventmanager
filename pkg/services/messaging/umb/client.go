@@ -50,6 +50,7 @@ func Subscribe(virtualTopic string, handler func(event interface{}) error) error
 	destination := consumerId + virtualTopic
 	client.subscribe.Lock()
 	defer client.subscribe.Unlock()
+	logging.Infof("Adding a subscription to %s", virtualTopic)
 	subscription, err := client.connection.FailoverSubscribe(destination, defaultACKMode)
 	if err != nil {
 		return err
@@ -77,6 +78,7 @@ func consume(subscription *stomp.Subscription, handler func(event interface{}) e
 			logging.Errorf("Error reading from topic: %s. %s", subscription.Destination(), err)
 			break
 		}
+		logging.Debugf("New message from %s", subscription.Destination())
 		client.handlers.Add(1)
 		go handle(msg, handler)
 	}
@@ -86,8 +88,8 @@ func handle(msg *stomp.Message, handler func(event interface{}) error) {
 	// when finish remove from group
 	defer client.handlers.Done()
 	// heavy consuming may regex over string
-	var event interface{}
-	// logging.Debugf("Print message %+v", string(msg.Body[:]))
+	var event map[string]interface{}
+	logging.Debugf("Print message %+v", string(msg.Body[:]))
 	if err := json.Unmarshal(msg.Body, &event); err != nil {
 		logging.Error(err)
 	}
