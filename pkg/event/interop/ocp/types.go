@@ -1,7 +1,7 @@
 package ocp
 
 type BuildComplete struct {
-	Artifact   Artifact `json:"artififact"`
+	Artifact   Artifact `json:"artifact"`
 	Contact    Contact  `json:"contact"`
 	GenerateAt string   `json:"generated_at"`
 	System     []System `json:"system"`
@@ -11,7 +11,7 @@ type BuildComplete struct {
 type TestComplete struct {
 	Contact    Contact  `json:"contact"`
 	Run        Run      `json:"run"`
-	Artifact   Artifact `json:"artififact"`
+	Artifact   Artifact `json:"artifact"`
 	Test       Test     `json:"test"`
 	GenerateAt string   `json:"generated_at"`
 	System     []System `json:"system"`
@@ -21,7 +21,7 @@ type TestComplete struct {
 type TestError struct {
 	Contact    Contact  `json:"contact"`
 	Run        Run      `json:"run"`
-	Artifact   Artifact `json:"artififact"`
+	Artifact   Artifact `json:"artifact"`
 	Test       Test     `json:"test"`
 	Error      Error    `json:"error"`
 	GenerateAt string   `json:"generated_at"`
@@ -56,7 +56,7 @@ type Product struct {
 	External_build_index_url string        `json:"external_build_index_url"`
 	ProductType              string        `json:"type"`
 	State                    string        `json:"state"`
-	Artifacts                []interface{} `json:"artifcats"`
+	Artifacts                []interface{} `json:"artifacts"`
 	Phase                    string        `json:"phase"`
 	Release                  string        `json:"release"`
 }
