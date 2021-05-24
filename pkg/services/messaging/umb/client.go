@@ -73,6 +73,7 @@ func consume(subscription *stomp.Subscription, handler func(event interface{}) e
 		msg, err := subscription.Read()
 		if err != nil {
 			if !subscription.Active() {
+				logging.Debugf("Read unsubscription message for subscription %s", subscription.Destination())
 				break
 			}
 			logging.Errorf("Error reading from topic: %s. %s", subscription.Destination(), err)
@@ -104,7 +105,6 @@ func GracefullShutdown() {
 			logging.Error(err)
 			// Force consume as finished ?
 		}
-		client.consumers.Done()
 	}
 	client.handlers.Wait()
 	client.connection.Disconnect()
