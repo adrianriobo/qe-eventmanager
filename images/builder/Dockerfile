@@ -1,7 +1,7 @@
 # Build the manager binary
 FROM registry.access.redhat.com/ubi8/go-toolset:1.14.12 as builder
 
-WORKDIR /workspace
+WORKDIR /tmp
 COPY . .
 RUN make build
 
@@ -9,6 +9,6 @@ FROM registry.access.redhat.com/ubi8/ubi-minimal
 
 LABEL MAINTAINER "Adrian Riobo" "<ariobolo@redhat.com>"
 
-COPY --from=builder /workspace/out/qe-eventmanager /workspace/images/builder/entrypoint.sh /usr/local/bin/
+COPY --from=builder /tmp/out/qe-eventmanager /tmp/images/builder/entrypoint.sh /usr/local/bin/
 
 ENTRYPOINT entrypoint.sh 
