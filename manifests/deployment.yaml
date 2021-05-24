@@ -18,16 +18,30 @@ spec:
       containers:
       - name: qe-eventmanager
         image: quay.io/ariobolo/qe-eventmanager:0.0.1
+        env:
+        - name: BROKERS
+          valueFrom:
+            secretKeyRef:
+              name: qe-eventmanager-config
+              key: brokers
+        - name: CA   
+          value: /etc/qe-eventmanager/ca.crt
+        - name: CERTIFICATE   
+          value: /etc/qe-eventmanager/sa.crt
+        - name: KEY   
+          value: /etc/qe-eventmanager/sa.key
         volumeMounts:
-        - mountPath: /var/run/secrets/tokens
-          name: vault-token
-      serviceAccountName: pipeline-runner
+        - mountPath: /etc/qe-eventmanager/
+          name: qe-eventmanager-config
+      serviceAccountName: qe-eventmanager
       volumes:
-      - name: vault-token
-        projected:
-          sources:
-          - serviceAccountToken:
-              path: vault-token
-              expirationSeconds: 7200
-              audience: vault
-            
+      - name: qe-eventmanager-config
+        secret:
+          secretName: qe-eventmanager-config
+          items:
+          - key: ca
+            path: ca.crt
+          - key: certificate
+            path: sa.crt
+          - key: key
+            path: sa.key

@@ -1,3 +1,4 @@
 out/
 run.sh
 .vscode
+manifests/config.yaml
