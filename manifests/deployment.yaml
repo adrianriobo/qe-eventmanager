@@ -1,0 +1,33 @@
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: qe-eventmanager
+  labels:
+    app: qe-eventmanager
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: qe-eventmanager
+  template:
+    metadata:
+      labels:
+        app: qe-eventmanager
+    spec:
+      containers:
+      - name: qe-eventmanager
+        image: quay.io/ariobolo/qe-eventmanager:0.0.1
+        volumeMounts:
+        - mountPath: /var/run/secrets/tokens
+          name: vault-token
+      serviceAccountName: pipeline-runner
+      volumes:
+      - name: vault-token
+        projected:
+          sources:
+          - serviceAccountToken:
+              path: vault-token
+              expirationSeconds: 7200
+              audience: vault
+            

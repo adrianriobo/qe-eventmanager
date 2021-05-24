@@ -9,7 +9,9 @@ import (
 )
 
 const (
-	crcNamespace string = "codeready-container"
+	crcNamespace                string = "codeready-container"
+	pipelinesDashboardBaseUrl   string = "https://tekton-dashboard-openshift-pipelines.apps.ocp4.prod.psi.redhat.com"
+	pipelinesDashboardUrlFormat string = "%s/#/namespaces/%s/pipelineruns/%s"
 )
 
 var (

@@ -1,4 +1,4 @@
-package event
+package manager
 
 type Event interface {
 	GetDestination() error

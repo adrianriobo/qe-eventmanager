@@ -1,0 +1,35 @@
+---
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: pipeline-runner
+  labels:
+    app.kubernetes.io/component: rbac
+    app.kubernetes.io/part-of: qe-eventmanager
+---
+kind: Role
+apiVersion: rbac.authorization.k8s.io/v1
+metadata:
+  name: pipeline-runner
+  labels:
+    app.kubernetes.io/component: rbac
+    app.kubernetes.io/part-of: qe-eventmanager
+rules:
+  - apiGroups: ["tekton.dev"]
+    resources: ["tasks", "taskruns", "pipelines", "pipelineruns", "pipelineresources", "conditions"]
+    verbs: ["get", "list", "create", "update", "delete", "patch", "watch"]
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: pipeline-runner
+  labels:
+    app.kubernetes.io/component: rbac
+    app.kubernetes.io/part-of: qe-eventmanager
+subjects:
+- kind: ServiceAccount
+  name: pipeline-runner
+roleRef:
+  kind: Role 
+  name: pipeline-runner
+  apiGroup: rbac.authorization.k8s.io

@@ -15,7 +15,7 @@ const (
 	certificateFile string = "certificate-file"
 	privateKeyFile  string = "private-key-file"
 	caCertsFile     string = "ca-certs"
-	kubeconfigPath  string = "kubeconfigPath"
+	kubeconfig      string = "kubeconfig"
 )
 
 func init() {
@@ -25,7 +25,7 @@ func init() {
 	flagSet.StringP(certificateFile, "", "", "certificate file for client auth")
 	flagSet.StringP(privateKeyFile, "", "", "key file for client auth")
 	flagSet.StringP(caCertsFile, "", "", "root ca for messageing server auth")
-	flagSet.StringP(kubeconfigPath, "k", "", "kubeconfig file path")
+	flagSet.StringP(kubeconfig, "k", "", "kubeconfig file path")
 	startCmd.Flags().AddFlagSet(flagSet)
 }
 
@@ -47,6 +47,6 @@ func runStart() {
 		viper.GetString(certificateFile),
 		viper.GetString(privateKeyFile),
 		viper.GetString(caCertsFile),
-		viper.GetString(kubeconfigPath),
+		viper.GetString(kubeconfig),
 		strings.Split(viper.GetString(brokers), ","))
 }

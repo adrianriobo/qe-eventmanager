@@ -1,6 +1,8 @@
 package pipelines
 
 import (
+	"fmt"
+
 	"github.com/adrianriobo/qe-eventmanager/pkg/services/ci/pipelines"
 
 	v1beta1 "github.com/tektoncd/pipeline/pkg/apis/pipeline/v1beta1"
@@ -15,17 +17,17 @@ const (
 	correlationParamName string = "correlation"
 )
 
-func RunInteropOCP(ocpVersion, correlation string) (*v1beta1.PipelineRunStatus, error) {
+func RunInteropOCP(ocpVersion, correlation string) (string, string, *v1beta1.PipelineRunStatus, error) {
 	pipelinerun, err := pipelines.CreatePipelinerun(crcNamespace, getSpecInteropOCP(ocpVersion, correlation))
 	if err != nil {
-		return nil, err
+		return "", "", nil, err
 	}
 	status := make(chan *v1beta1.PipelineRunStatus)
 	informerStopper := make(chan struct{})
 	defer close(status)
 	defer close(informerStopper)
 	go pipelines.AddInformer(crcNamespace, pipelinerun.GetName(), status, informerStopper)
-	return <-status, nil
+	return pipelinerun.GetName(), correlation, <-status, nil
 }
 
 func getSpecInteropOCP(ocpVersion, correlation string) *v1beta1.PipelineRun {
@@ -40,4 +42,8 @@ func getSpecInteropOCP(ocpVersion, correlation string) *v1beta1.PipelineRun {
 			Timeout:    &defaultTimeout,
 			Workspaces: []v1beta1.WorkspaceBinding{crcWorkspace}},
 	}
+}
+
+func GetPipelinerunDashboardUrl(pipelinerunName string) string {
+	return fmt.Sprintf(pipelinesDashboardUrlFormat, pipelinesDashboardBaseUrl, crcNamespace, pipelinerunName)
 }

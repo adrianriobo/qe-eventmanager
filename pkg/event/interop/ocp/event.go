@@ -1,6 +1,9 @@
 package ocp
 
 import (
+	"fmt"
+	"time"
+
 	"github.com/mitchellh/mapstructure"
 
 	"github.com/adrianriobo/qe-eventmanager/pkg/crc/pipelines"
@@ -10,8 +13,8 @@ import (
 )
 
 const (
-	buildComplete string = "VirtualTopic.qe.ci.product-scenario.ascerra.build.complete"
-	testComplete  string = "VirtualTopic.qe.ci.product-scenario.ascerra.test.complete"
+	topicBuildComplete string = "VirtualTopic.qe.ci.product-scenario.ascerra.build.complete"
+	topicTestComplete  string = "VirtualTopic.qe.ci.product-scenario.ascerra.test.complete"
 	// testError     string = "VirtualTopic.qe.ci.product-scenario.ascerra.test.error"
 )
 
@@ -23,7 +26,7 @@ func New() ProductScenarioBuild {
 }
 
 func (p ProductScenarioBuild) GetDestination() string {
-	return buildComplete
+	return topicBuildComplete
 }
 func (p ProductScenarioBuild) Handler(event interface{}) error {
 	var data BuildComplete
@@ -34,32 +37,50 @@ func (p ProductScenarioBuild) Handler(event interface{}) error {
 	// Business Logic
 	for _, product := range data.Artifact.Products {
 		if product.Name == "openshift" {
-			_, err := pipelines.RunInteropOCP(product.Id, util.GenerateCorrelation())
+			name, correlation, _, err := pipelines.RunInteropOCP(product.Id, util.GenerateCorrelation())
 			if err != nil {
 				logging.Error(err)
 			}
 			// We will take info from status to send back the results
-			var response TestComplete
-			mockResponse(&data, &response)
-
-			return umb.Send(testComplete, response)
+			response := buildResponse(name, correlation, &data)
+			return umb.Send(topicTestComplete, response)
 		}
 	}
 	return nil
 }
 
-func mockResponse(source *BuildComplete, response *TestComplete) {
-	response.Artifact = source.Artifact
-	response.Run = Run{
-		URL: "https://crcqe-jenkins-csb-codeready.cloud.paas.psi.redhat.com/view/qe-bundle-baremetal/job/qe/job/bundle_baremetal_macos14-brno/284",
-		Log: "https://crcqe-jenkins-csb-codeready.cloud.paas.psi.redhat.com/view/qe-bundle-baremetal/job/qe/job/bundle_baremetal_macos14-brno/284/console"}
-	response.Test = Test{
-		Category:  "interoperability",
-		Namespace: "interop",
-		TestType:  "product-scenario",
-		Result:    "passed",
-		Runtime:   "1800",
-		XunitUrls: []string{
-			"https://crcqe-jenkins-csb-codeready.cloud.paas.psi.redhat.com/view/qe-bundle-baremetal/job/qe/job/bundle_baremetal_macos14-brno/284/console",
-			"https://crcqe-jenkins-csb-codeready.cloud.paas.psi.redhat.com/view/qe-bundle-baremetal/job/qe/job/bundle_baremetal_macos14-brno/284/console"}}
+func buildResponse(name, correlation string, source *BuildComplete) *TestComplete {
+	return &TestComplete{
+		Artifact: source.Artifact,
+		Run: Run{
+			URL: pipelines.GetPipelinerunDashboardUrl(name),
+			Log: pipelines.GetPipelinerunDashboardUrl(name)},
+		Test: Test{
+			Category:  "interoperability",
+			Namespace: "interop",
+			TestType:  "product-scenario",
+			Result:    "passed",
+			Runtime:   "1800",
+			XunitUrls: xunitFilesUrls(correlation)},
+	}
+}
+
+func xunitFilesUrls(correlation string) []string {
+	var xunitUrls []string
+	servers := []string{"fedora33", "macos14-brno", "macos15-brno",
+		"rhel79", "rhel8-brno", "rhel83", "windows10-brno"}
+	files := []string{"basic.xml", "config.xml", "story_health.xml",
+		"story_marketplace.xml", "story_registry.xml", "cert_rotation.xml",
+		"proxy.xml", "integration.xml"}
+	datalakeUrl := "http://10.0.110.220:9000/logs"
+	t := time.Now().Local()
+	logsDate := fmt.Sprint(t.Format("20060102"))
+	for _, server := range servers {
+		for _, file := range files {
+			url := fmt.Sprintf("%s/%s/%s/%s/%s",
+				datalakeUrl, logsDate, correlation, server, file)
+			xunitUrls = append(xunitUrls, url)
+		}
+	}
+	return xunitUrls
 }
