@@ -43,13 +43,14 @@ func BackupLogFile() {
 }
 
 func InitLogrus(logLevel, basePath string, fileName string) {
-	var err error
-	logfile, err = OpenLogFile(basePath, fileName)
-	if err != nil {
-		logrus.Fatal("Unable to open log file: ", err)
-	}
+	// var err error
+	// logfile, err = OpenLogFile(basePath, fileName)
+	// if err != nil {
+	// 	logrus.Fatal("Unable to open log file: ", err)
+	// }
 	// send logs to file and console
-	logrus.SetOutput(io.MultiWriter(logfile, os.Stdout))
+	// logrus.SetOutput(io.MultiWriter(logfile, os.Stdout))
+	logrus.SetOutput(io.MultiWriter(os.Stdout))
 	logrus.SetLevel(logrus.DebugLevel)
 	logrus.SetFormatter(&logrus.JSONFormatter{})
 
