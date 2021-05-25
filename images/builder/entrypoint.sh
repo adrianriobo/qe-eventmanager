@@ -29,13 +29,13 @@ fi
 
 # Run qe-eventmanager
 if [ -z "${KUBECONFIG}" ]; then
-  qe-eventmanager start \
+  exec qe-eventmanager start \
     --brokers "${BROKERS}" \
     --ca-certs "${CA}" \
  		--certificate-file "${CERTIFICATE}" \ 
 		--private-key-file "${KEY}"
 else 
-  qe-eventmanager start \
+  exec qe-eventmanager start \
     --brokers "${BROKERS}" \
     --ca-certs "${CA}" \
     --certificate-file "${CERTIFICATE}" \
