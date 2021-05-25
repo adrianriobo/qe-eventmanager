@@ -18,6 +18,15 @@ const (
 	// testError     string = "VirtualTopic.qe.ci.product-scenario.ascerra.test.error"
 )
 
+var (
+	// servers []string = []string{"fedora33", "macos14-brno", "macos15-brno",
+	// 	"rhel79", "rhel8-brno", "rhel83", "windows10-brno"}
+	servers []string = []string{"macos15-brno", "rhel83"}
+	files   []string = []string{"basic.xml", "config.xml", "story_health.xml",
+		"story_marketplace.xml", "story_registry.xml", "cert_rotation.xml",
+		"proxy.xml", "integration.xml"}
+)
+
 type ProductScenarioBuild struct {
 }
 
@@ -67,11 +76,6 @@ func buildResponse(name, correlation string, source *BuildComplete) *TestComplet
 
 func xunitFilesUrls(correlation string) []string {
 	var xunitUrls []string
-	servers := []string{"fedora33", "macos14-brno", "macos15-brno",
-		"rhel79", "rhel8-brno", "rhel83", "windows10-brno"}
-	files := []string{"basic.xml", "config.xml", "story_health.xml",
-		"story_marketplace.xml", "story_registry.xml", "cert_rotation.xml",
-		"proxy.xml", "integration.xml"}
 	datalakeUrl := "http://10.0.110.220:9000/logs"
 	t := time.Now().Local()
 	logsDate := fmt.Sprint(t.Format("20060102"))
