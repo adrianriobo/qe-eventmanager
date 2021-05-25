@@ -1,6 +1,8 @@
 # qe-eventmanager
 Sample app for handling qe events
 
+[![Container Repository on Quay](https://quay.io/repository/ariobolo/qe-eventmanager/status "Container Repository on Quay")](https://quay.io/repository/ariobolo/qe-eventmanager)
+
 # overview
 
 UMB integration with qe platform
