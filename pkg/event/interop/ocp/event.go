@@ -2,6 +2,7 @@ package ocp
 
 import (
 	"fmt"
+	"strings"
 	"time"
 
 	"github.com/mitchellh/mapstructure"
@@ -19,10 +20,9 @@ const (
 )
 
 var (
-	// servers []string = []string{"fedora33", "macos14-brno", "macos15-brno",
-	// 	"rhel79", "rhel8-brno", "rhel83", "windows10-brno"}
-	servers []string = []string{"macos15-brno", "rhel83"}
-	files   []string = []string{"basic.xml", "config.xml", "story_health.xml",
+	serversids []string = []string{"macos14-brno", "macos15-brno", "windows10-brno", "rhel8-brno"}
+	platforms  []string = []string{"fedora33", "rhel79", "rhel83"}
+	files      []string = []string{"basic.xml", "config.xml", "story_health.xml",
 		"story_marketplace.xml", "story_registry.xml", "cert_rotation.xml",
 		"proxy.xml", "integration.xml"}
 )
@@ -46,7 +46,10 @@ func (p ProductScenarioBuild) Handler(event interface{}) error {
 	// Business Logic
 	for _, product := range data.Artifact.Products {
 		if product.Name == "openshift" {
-			name, correlation, _, err := pipelines.RunInteropOCP(product.Id, util.GenerateCorrelation())
+			name, correlation, _, err :=
+				pipelines.RunInteropOCP(product.Id, util.GenerateCorrelation(),
+					strings.Join(serversids[:], ","),
+					strings.Join(platforms[:], ","))
 			if err != nil {
 				logging.Error(err)
 			}
@@ -79,6 +82,7 @@ func xunitFilesUrls(correlation string) []string {
 	datalakeUrl := "http://10.0.110.220:9000/logs"
 	t := time.Now().Local()
 	logsDate := fmt.Sprint(t.Format("20060102"))
+	servers := append(serversids, platforms...)
 	for _, server := range servers {
 		for _, file := range files {
 			url := fmt.Sprintf("%s/%s/%s/%s/%s",
