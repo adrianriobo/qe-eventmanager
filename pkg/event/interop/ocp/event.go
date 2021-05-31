@@ -14,8 +14,8 @@ import (
 )
 
 const (
-	topicBuildComplete string = "VirtualTopic.qe.ci.product-scenario.ascerra.build.complete"
-	topicTestComplete  string = "VirtualTopic.qe.ci.product-scenario.ascerra.test.complete"
+	topicBuildComplete string = "VirtualTopic.qe.ci.product-scenario.build.complete"
+	topicTestComplete  string = "VirtualTopic.qe.ci.product-scenario.test.complete"
 	// testError     string = "VirtualTopic.qe.ci.product-scenario.ascerra.test.error"
 )
 
@@ -44,19 +44,28 @@ func (p ProductScenarioBuild) Handler(event interface{}) error {
 		return err
 	}
 	// Business Logic
+	var openshiftVersion string = ""
+	var codereadyContainersMessage bool = false
 	for _, product := range data.Artifact.Products {
 		if product.Name == "openshift" {
-			name, correlation, _, err :=
-				pipelines.RunInteropOCP(product.Id, util.GenerateCorrelation(),
-					strings.Join(serversids[:], ","),
-					strings.Join(platforms[:], ","))
-			if err != nil {
-				logging.Error(err)
-			}
-			// We will take info from status to send back the results
-			response := buildResponse(name, correlation, &data)
-			return umb.Send(topicTestComplete, response)
+			openshiftVersion = product.Id
 		}
+		if product.Name == "codeready_containers" {
+			codereadyContainersMessage = true
+		}
+	}
+	// Filtering this will be improved in future versions
+	if len(openshiftVersion) > 0 && codereadyContainersMessage {
+		name, correlation, _, err :=
+			pipelines.RunInteropOCP(openshiftVersion, util.GenerateCorrelation(),
+				strings.Join(serversids[:], ","),
+				strings.Join(platforms[:], ","))
+		if err != nil {
+			logging.Error(err)
+		}
+		// We will take info from status to send back the results
+		response := buildResponse(name, correlation, &data)
+		return umb.Send(topicTestComplete, response)
 	}
 	return nil
 }
