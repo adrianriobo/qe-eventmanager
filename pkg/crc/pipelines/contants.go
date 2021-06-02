@@ -22,6 +22,6 @@ var (
 	}
 
 	defaultTimeout v1.Duration = v1.Duration{
-		Duration: 5 * time.Hour,
+		Duration: 8 * time.Hour,
 	}
 )
