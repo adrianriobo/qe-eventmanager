@@ -29,18 +29,16 @@ fi
 
 # Run qe-eventmanager
 if [ -z "${KUBECONFIG}" ]; then
-    # Inside the cluster por running as SA with permissions
-  	qe-eventmanager start \
-                --brokers "${BROKERS}" \
-		--ca-certs "${CA}" \
- 		--certificate-file "${CERTIFICATE}" \ 
-		--private-key-file "${KEY}" \
+  exec qe-eventmanager start \
+    --brokers "${BROKERS}" \
+    --ca-certs "${CA}" \
+ 		--certificate-file "${CERTIFICATE}" \
+		--private-key-file "${KEY}"
 else 
-    # OCP Cluster access based on kubeconfig file 
-	qe-eventmanager start \
-                --brokers "${BROKERS}" \
-                --ca-certs "${CA}" \
-                --certificate-file "${CERTIFICATE}" \ 
-                --private-key-file "${KEY}" \
-                --kubeconfig "${KUBECONFIG}"
+  exec qe-eventmanager start \
+    --brokers "${BROKERS}" \
+    --ca-certs "${CA}" \
+    --certificate-file "${CERTIFICATE}" \
+    --private-key-file "${KEY}" \
+    --kubeconfig "${KUBECONFIG}"
 fi

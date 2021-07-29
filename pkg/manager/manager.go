@@ -3,6 +3,7 @@ package manager
 import (
 	"os"
 	"os/signal"
+	"syscall"
 
 	eventInteropOCP "github.com/adrianriobo/qe-eventmanager/pkg/event/interop/ocp"
 	"github.com/adrianriobo/qe-eventmanager/pkg/services/ci/pipelines"
@@ -46,7 +47,10 @@ func handleEvents() error {
 
 func waitForStop() {
 	s := make(chan os.Signal, 1)
-	signal.Notify(s, os.Interrupt)
+	signal.Notify(s,
+		os.Interrupt,
+		syscall.SIGTERM,
+		syscall.SIGQUIT)
 	<-s
 }
 

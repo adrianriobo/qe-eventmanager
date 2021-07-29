@@ -15,10 +15,12 @@ const (
 
 	ocpVersionParamName  string = "ocp-version"
 	correlationParamName string = "correlation"
+	serversidsParamName  string = "servers-ids"
+	platformsParamName   string = "platforms"
 )
 
-func RunInteropOCP(ocpVersion, correlation string) (string, string, *v1beta1.PipelineRunStatus, error) {
-	pipelinerun, err := pipelines.CreatePipelinerun(crcNamespace, getSpecInteropOCP(ocpVersion, correlation))
+func RunInteropOCP(ocpVersion, correlation, serversids, platforms string) (string, string, *v1beta1.PipelineRunStatus, error) {
+	pipelinerun, err := pipelines.CreatePipelinerun(crcNamespace, getSpecInteropOCP(ocpVersion, correlation, serversids, platforms))
 	if err != nil {
 		return "", "", nil, err
 	}
@@ -30,7 +32,7 @@ func RunInteropOCP(ocpVersion, correlation string) (string, string, *v1beta1.Pip
 	return pipelinerun.GetName(), correlation, <-status, nil
 }
 
-func getSpecInteropOCP(ocpVersion, correlation string) *v1beta1.PipelineRun {
+func getSpecInteropOCP(ocpVersion, correlation, serversids, platforms string) *v1beta1.PipelineRun {
 	return &v1beta1.PipelineRun{
 		TypeMeta:   v1.TypeMeta{},
 		ObjectMeta: v1.ObjectMeta{GenerateName: pipelineRunName, Namespace: crcNamespace},
@@ -38,7 +40,9 @@ func getSpecInteropOCP(ocpVersion, correlation string) *v1beta1.PipelineRun {
 			PipelineRef: &v1beta1.PipelineRef{Name: pipelineRefName},
 			Params: []v1beta1.Param{
 				{Name: ocpVersionParamName, Value: *v1beta1.NewArrayOrString(ocpVersion)},
-				{Name: correlationParamName, Value: *v1beta1.NewArrayOrString(correlation)}},
+				{Name: correlationParamName, Value: *v1beta1.NewArrayOrString(correlation)},
+				{Name: serversidsParamName, Value: *v1beta1.NewArrayOrString(serversids)},
+				{Name: platformsParamName, Value: *v1beta1.NewArrayOrString(platforms)}},
 			Timeout:    &defaultTimeout,
 			Workspaces: []v1beta1.WorkspaceBinding{crcWorkspace}},
 	}

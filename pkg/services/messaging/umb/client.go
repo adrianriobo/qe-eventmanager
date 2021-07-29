@@ -57,7 +57,7 @@ func Subscribe(virtualTopic string, handler func(event interface{}) error) error
 	}
 	client.subscriptions = append(client.subscriptions, subscription)
 	client.consumers.Add(1)
-	go consume(subscription, handler)
+	go consume(&client, subscription, handler)
 	return nil
 }
 
@@ -67,27 +67,28 @@ func Send(destination string, message interface{}) error {
 	return client.connection.FailoverSend("/topic/"+destination, message)
 }
 
-func consume(subscription *stomp.Subscription, handler func(event interface{}) error) {
+func consume(client *Client, subscription *stomp.Subscription, handler func(event interface{}) error) {
 	defer client.consumers.Done()
 	for subscription.Active() {
 		msg, err := subscription.Read()
 		if err != nil {
 			if !subscription.Active() {
+				logging.Debugf("Read message from inactive subscription %s", subscription.Destination())
 				break
 			}
 			logging.Errorf("Error reading from topic: %s. %s", subscription.Destination(), err)
 			break
 		}
-		logging.Debugf("New message from %s", subscription.Destination())
+		logging.Infof("New message from %s, adding new handler for it", subscription.Destination())
 		client.handlers.Add(1)
-		go handle(msg, handler)
+		go handle(client, msg, handler)
 	}
+	logging.Debugf("Finalize consumer for subscription %s", subscription.Destination())
 }
 
-func handle(msg *stomp.Message, handler func(event interface{}) error) {
-	// when finish remove from group
+func handle(client *Client, msg *stomp.Message, handler func(event interface{}) error) {
 	defer client.handlers.Done()
-	// heavy consuming may regex over string
+	// heavy consuming may regex over string, jsonpath
 	var event map[string]interface{}
 	logging.Debugf("Print message %+v", string(msg.Body[:]))
 	if err := json.Unmarshal(msg.Body, &event); err != nil {
@@ -104,8 +105,10 @@ func GracefullShutdown() {
 			logging.Error(err)
 			// Force consume as finished ?
 		}
-		client.consumers.Done()
+		logging.Infof("Unsubscribing %s", subscription.Destination())
 	}
+	client.consumers.Wait()
 	client.handlers.Wait()
 	client.connection.Disconnect()
+	logging.Infof("Client disconnected from UMB")
 }
