@@ -9,8 +9,11 @@ import (
 )
 
 const (
-	topicBuildComplete string = "VirtualTopic.qe.ci.product-scenario.build.complete"
-	topicTestComplete  string = "VirtualTopic.qe.ci.product-scenario.test.complete"
+	topicBuildComplete string = "VirtualTopic.qe.ci.product-scenario.vipatel.build.complete"
+	topicTestComplete  string = "VirtualTopic.qe.ci.product-scenario.vipatel.test.complete"
+
+	// topicBuildComplete string = "VirtualTopic.qe.ci.product-scenario.build.complete"
+	// topicTestComplete  string = "VirtualTopic.qe.ci.product-scenario.test.complete"
 	// testError     string = "VirtualTopic.qe.ci.product-scenario.ascerra.test.error"
 
 	baseosRepositoryName    string = "baseos"
