@@ -5,12 +5,12 @@ import (
 	"strings"
 	"time"
 
-	"github.com/mitchellh/mapstructure"
-
-	"github.com/adrianriobo/qe-eventmanager/pkg/crc/pipelines"
+	interopPipelines "github.com/adrianriobo/qe-eventmanager/pkg/crc/pipelines/interop"
+	interopEvent "github.com/adrianriobo/qe-eventmanager/pkg/event/interop"
 	"github.com/adrianriobo/qe-eventmanager/pkg/services/messaging/umb"
 	"github.com/adrianriobo/qe-eventmanager/pkg/util"
 	"github.com/adrianriobo/qe-eventmanager/pkg/util/logging"
+	"github.com/mitchellh/mapstructure"
 )
 
 const (
@@ -57,7 +57,7 @@ func (p ProductScenarioBuild) Handler(event interface{}) error {
 	// Filtering this will be improved in future versions
 	if len(openshiftVersion) > 0 && codereadyContainersMessage {
 		name, correlation, _, err :=
-			pipelines.RunInteropOCP(openshiftVersion, util.GenerateCorrelation(),
+			interopPipelines.RunInteropOCP(openshiftVersion, util.GenerateCorrelation(),
 				strings.Join(serversids[:], ","),
 				strings.Join(platforms[:], ","))
 		if err != nil {
@@ -73,10 +73,10 @@ func (p ProductScenarioBuild) Handler(event interface{}) error {
 func buildResponse(name, correlation string, source *BuildComplete) *TestComplete {
 	return &TestComplete{
 		Artifact: source.Artifact,
-		Run: Run{
-			URL: pipelines.GetPipelinerunDashboardUrl(name),
-			Log: pipelines.GetPipelinerunDashboardUrl(name)},
-		Test: Test{
+		Run: interopEvent.Run{
+			URL: interopPipelines.GetPipelinerunDashboardUrl(name),
+			Log: interopPipelines.GetPipelinerunDashboardUrl(name)},
+		Test: interopEvent.Test{
 			Category:  "interoperability",
 			Namespace: "interop",
 			TestType:  "product-scenario",
