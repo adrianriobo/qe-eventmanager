@@ -5,7 +5,7 @@ import (
 	"strings"
 	"time"
 
-	interopPipelines "github.com/adrianriobo/qe-eventmanager/pkg/crc/pipelines/interop"
+	interopPipelineOCP "github.com/adrianriobo/qe-eventmanager/pkg/crc/pipelines/interop-ocp"
 	interopEvent "github.com/adrianriobo/qe-eventmanager/pkg/event/interop"
 	"github.com/adrianriobo/qe-eventmanager/pkg/services/messaging/umb"
 	"github.com/adrianriobo/qe-eventmanager/pkg/util"
@@ -57,7 +57,7 @@ func (p ProductScenarioBuild) Handler(event interface{}) error {
 	// Filtering this will be improved in future versions
 	if len(openshiftVersion) > 0 && codereadyContainersMessage {
 		name, correlation, _, err :=
-			interopPipelines.RunInteropOCP(openshiftVersion, util.GenerateCorrelation(),
+			interopPipelineOCP.Run(openshiftVersion, util.GenerateCorrelation(),
 				strings.Join(serversids[:], ","),
 				strings.Join(platforms[:], ","))
 		if err != nil {
@@ -74,8 +74,8 @@ func buildResponse(name, correlation string, source *BuildComplete) *TestComplet
 	return &TestComplete{
 		Artifact: source.Artifact,
 		Run: interopEvent.Run{
-			URL: interopPipelines.GetPipelinerunDashboardUrl(name),
-			Log: interopPipelines.GetPipelinerunDashboardUrl(name)},
+			URL: interopPipelineOCP.GetPipelinerunDashboardUrl(name),
+			Log: interopPipelineOCP.GetPipelinerunDashboardUrl(name)},
 		Test: interopEvent.Test{
 			Category:  "interoperability",
 			Namespace: "interop",

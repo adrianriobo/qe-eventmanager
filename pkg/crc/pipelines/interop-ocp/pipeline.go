@@ -1,4 +1,4 @@
-package interop
+package interopOCP
 
 import (
 	"fmt"
@@ -20,8 +20,8 @@ const (
 	platformsParamName   string = "platforms"
 )
 
-func RunInteropOCP(ocpVersion, correlation, serversids, platforms string) (string, string, *v1beta1.PipelineRunStatus, error) {
-	pipelinerun, err := pipelines.CreatePipelinerun(crcPipelines.Namespace, getSpecInteropOCP(ocpVersion, correlation, serversids, platforms))
+func Run(ocpVersion, correlation, serversids, platforms string) (string, string, *v1beta1.PipelineRunStatus, error) {
+	pipelinerun, err := pipelines.CreatePipelinerun(crcPipelines.Namespace, getSpec(ocpVersion, correlation, serversids, platforms))
 	if err != nil {
 		return "", "", nil, err
 	}
@@ -33,7 +33,7 @@ func RunInteropOCP(ocpVersion, correlation, serversids, platforms string) (strin
 	return pipelinerun.GetName(), correlation, <-status, nil
 }
 
-func getSpecInteropOCP(ocpVersion, correlation, serversids, platforms string) *v1beta1.PipelineRun {
+func getSpec(ocpVersion, correlation, serversids, platforms string) *v1beta1.PipelineRun {
 	return &v1beta1.PipelineRun{
 		TypeMeta:   v1.TypeMeta{},
 		ObjectMeta: v1.ObjectMeta{GenerateName: pipelineRunName, Namespace: crcPipelines.Namespace},
