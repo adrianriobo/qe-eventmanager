@@ -38,6 +38,7 @@ func (p ProductScenarioBuild) Handler(event interface{}) error {
 		if product.Name == "rhel" {
 			rhelVersion = product.Id
 			baseosURL, appstreamURL = getRepositoriesURLs(product.Repos)
+			logging.Debugf("Got repos baseos: %s, appstream %s", baseosURL, appstreamURL)
 			imageID = product.Image
 		}
 		if product.Name == "codeready_containers" {
