@@ -63,9 +63,9 @@ func getRepositoriesURLs(repositories []Repository) (baseosURL, appstreamURL str
 	for _, repository := range repositories {
 		switch repository.Name {
 		case baseosRepositoryName:
-			baseosURL = repository.BaseUrl
+			baseosURL = repository.Base_Url
 		case appstreamRepositoryName:
-			appstreamURL = repository.BaseUrl
+			appstreamURL = repository.Base_Url
 		}
 	}
 	return

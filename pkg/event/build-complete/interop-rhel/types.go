@@ -58,6 +58,6 @@ type Product struct {
 }
 
 type Repository struct {
-	BaseUrl string `json:"base_url"`
-	Name    string `json:"name"`
+	Base_Url string `json:"base_url"`
+	Name     string `json:"name"`
 }
