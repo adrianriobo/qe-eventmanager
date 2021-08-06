@@ -5,7 +5,9 @@ import (
 	"os/signal"
 	"syscall"
 
-	eventInteropRHEL "github.com/adrianriobo/qe-eventmanager/pkg/event/interop/rhel"
+	buildComplete "github.com/adrianriobo/qe-eventmanager/pkg/event/build-complete"
+	interopOCP "github.com/adrianriobo/qe-eventmanager/pkg/event/build-complete/interop-ocp"
+	interopRHEL "github.com/adrianriobo/qe-eventmanager/pkg/event/build-complete/interop-rhel"
 	"github.com/adrianriobo/qe-eventmanager/pkg/services/ci/pipelines"
 	"github.com/adrianriobo/qe-eventmanager/pkg/services/messaging/umb"
 	"github.com/adrianriobo/qe-eventmanager/pkg/util/logging"
@@ -37,8 +39,9 @@ func Initialize(certificateFile, privateKeyFile, caCertsFile, kubeconfigPath str
 }
 
 func handleEvents() error {
-	eventDefinition := eventInteropRHEL.New()
-	if err := umb.Subscribe(eventDefinition.GetDestination(), func(event interface{}) error { return eventDefinition.Handler(event) }); err != nil {
+	if err := umb.Subscribe(buildComplete.Topic, []func(event interface{}) error{
+		func(event interface{}) error { return interopOCP.New().Handler(event) },
+		func(event interface{}) error { return interopRHEL.New().Handler(event) }}); err != nil {
 		umb.GracefullShutdown()
 		return err
 	}

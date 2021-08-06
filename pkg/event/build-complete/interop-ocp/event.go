@@ -1,4 +1,4 @@
-package ocp
+package interopOCP
 
 import (
 	"fmt"
@@ -6,7 +6,7 @@ import (
 	"time"
 
 	interopPipelineOCP "github.com/adrianriobo/qe-eventmanager/pkg/crc/pipelines/interop-ocp"
-	interopEvent "github.com/adrianriobo/qe-eventmanager/pkg/event/interop"
+	buildComplete "github.com/adrianriobo/qe-eventmanager/pkg/event/build-complete"
 	"github.com/adrianriobo/qe-eventmanager/pkg/services/messaging/umb"
 	"github.com/adrianriobo/qe-eventmanager/pkg/util"
 	"github.com/adrianriobo/qe-eventmanager/pkg/util/logging"
@@ -14,8 +14,7 @@ import (
 )
 
 const (
-	topicBuildComplete string = "VirtualTopic.qe.ci.product-scenario.build.complete"
-	topicTestComplete  string = "VirtualTopic.qe.ci.product-scenario.test.complete"
+	topicTestComplete string = "VirtualTopic.qe.ci.product-scenario.test.complete"
 	// testError     string = "VirtualTopic.qe.ci.product-scenario.ascerra.test.error"
 )
 
@@ -34,9 +33,6 @@ func New() ProductScenarioBuild {
 	return ProductScenarioBuild{}
 }
 
-func (p ProductScenarioBuild) GetDestination() string {
-	return topicBuildComplete
-}
 func (p ProductScenarioBuild) Handler(event interface{}) error {
 	var data BuildComplete
 
@@ -73,10 +69,10 @@ func (p ProductScenarioBuild) Handler(event interface{}) error {
 func buildResponse(name, correlation string, source *BuildComplete) *TestComplete {
 	return &TestComplete{
 		Artifact: source.Artifact,
-		Run: interopEvent.Run{
+		Run: buildComplete.Run{
 			URL: interopPipelineOCP.GetPipelinerunDashboardUrl(name),
 			Log: interopPipelineOCP.GetPipelinerunDashboardUrl(name)},
-		Test: interopEvent.Test{
+		Test: buildComplete.Test{
 			Category:  "interoperability",
 			Namespace: "interop",
 			TestType:  "product-scenario",

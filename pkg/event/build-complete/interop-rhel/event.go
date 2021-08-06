@@ -1,18 +1,16 @@
-package rhel
+package interopRHEL
 
 import (
 	interopPipelineRHEL "github.com/adrianriobo/qe-eventmanager/pkg/crc/pipelines/interop-rhel"
-	interopEvent "github.com/adrianriobo/qe-eventmanager/pkg/event/interop"
+	buildComplete "github.com/adrianriobo/qe-eventmanager/pkg/event/build-complete"
 	"github.com/adrianriobo/qe-eventmanager/pkg/services/messaging/umb"
 	"github.com/adrianriobo/qe-eventmanager/pkg/util/logging"
 	"github.com/mitchellh/mapstructure"
 )
 
 const (
-	topicBuildComplete string = "VirtualTopic.qe.ci.product-scenario.vipatel.build.complete"
-	topicTestComplete  string = "VirtualTopic.qe.ci.product-scenario.vipatel.test.complete"
+	topicTestComplete string = "VirtualTopic.qe.ci.product-scenario.vipatel.test.complete"
 
-	// topicBuildComplete string = "VirtualTopic.qe.ci.product-scenario.build.complete"
 	// topicTestComplete  string = "VirtualTopic.qe.ci.product-scenario.test.complete"
 	// testError     string = "VirtualTopic.qe.ci.product-scenario.ascerra.test.error"
 
@@ -27,9 +25,6 @@ func New() ProductScenarioBuild {
 	return ProductScenarioBuild{}
 }
 
-func (p ProductScenarioBuild) GetDestination() string {
-	return topicBuildComplete
-}
 func (p ProductScenarioBuild) Handler(event interface{}) error {
 	var data BuildComplete
 
@@ -37,12 +32,13 @@ func (p ProductScenarioBuild) Handler(event interface{}) error {
 		return err
 	}
 	// Business Logic
-	var rhelVersion, baseosURL, appstreamURL string
+	var rhelVersion, baseosURL, appstreamURL, imageID string
 	var codereadyContainersMessage bool = false
 	for _, product := range data.Artifact.Products {
 		if product.Name == "rhel" {
 			rhelVersion = product.Id
 			baseosURL, appstreamURL = getRepositoriesURLs(product.Repos)
+			imageID = product.Image
 		}
 		if product.Name == "codeready_containers" {
 			codereadyContainersMessage = true
@@ -50,13 +46,13 @@ func (p ProductScenarioBuild) Handler(event interface{}) error {
 	}
 	// Filtering this will be improved in future versions
 	if len(rhelVersion) > 0 && codereadyContainersMessage {
-		name, xunitURL, err :=
-			interopPipelineRHEL.Run(rhelVersion, baseosURL, appstreamURL)
+		name, xunitURL, duration, resultStatus, err :=
+			interopPipelineRHEL.Run(rhelVersion, baseosURL, appstreamURL, imageID)
 		if err != nil {
 			logging.Error(err)
 		}
 		// We will take info from status to send back the results
-		response := buildResponse(name, xunitURL, &data)
+		response := buildResponse(name, xunitURL, duration, resultStatus, &data)
 		return umb.Send(topicTestComplete, response)
 	}
 	return nil
@@ -74,18 +70,18 @@ func getRepositoriesURLs(repositories []Repository) (baseosURL, appstreamURL str
 	return
 }
 
-func buildResponse(name, xunitURL string, source *BuildComplete) *TestComplete {
+func buildResponse(name, xunitURL, duration, resultStatus string, source *BuildComplete) *TestComplete {
 	return &TestComplete{
 		Artifact: source.Artifact,
-		Run: interopEvent.Run{
+		Run: buildComplete.Run{
 			URL: interopPipelineRHEL.GetPipelinerunDashboardUrl(name),
 			Log: interopPipelineRHEL.GetPipelinerunDashboardUrl(name)},
-		Test: interopEvent.Test{
+		Test: buildComplete.Test{
 			Category:  "interoperability",
 			Namespace: "interop",
 			TestType:  "product-scenario",
-			Result:    "passed",
-			Runtime:   "1800",
+			Result:    resultStatus,
+			Runtime:   duration,
 			XunitUrls: []string{xunitURL}},
 	}
 }

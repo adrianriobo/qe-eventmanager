@@ -1,4 +1,4 @@
-package rhel
+package buildComplete
 
 type Contact struct {
 	Name  string `json:"name"`
