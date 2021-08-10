@@ -61,12 +61,16 @@ func AddInformer(namespace, pipelinerunName string, status chan *v1beta1.Pipelin
 		}
 		logging.Debugf("Change on pipelinerun %s", pipelineRun.GetName())
 		if pipelineRun.GetName() == pipelinerunName &&
-			(pipelineRun.IsDone() || pipelineRun.IsCancelled() || pipelineRun.IsTimedOut()) {
+			(pipelineRun.IsDone() && waitForResults(pipelineRun) || pipelineRun.IsCancelled() || pipelineRun.IsTimedOut()) {
 			// Send the status of the pipelinerun when is done
 			status <- &pipelineRun.Status
 		}
 	}})
 	informer.Run(informerStopper)
+}
+
+func waitForResults(pipelineRun *v1beta1.PipelineRun) bool {
+	return len(pipelineRun.Spec.PipelineSpec.Results) > 0 && len(pipelineRun.Status.PipelineRunStatusFields.PipelineResults) > 0
 }
 
 func checkInitialization() error {
