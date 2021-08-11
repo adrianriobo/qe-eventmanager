@@ -46,7 +46,7 @@ func NewClient(certificateFile, privateKeyFile, caCertsFile string, brokers []st
 }
 
 // TODO add selector based on regex??
-func Subscribe(virtualTopic string, handler func(event interface{}) error) error {
+func Subscribe(virtualTopic string, handlers []func(event interface{}) error) error {
 	destination := consumerId + virtualTopic
 	client.subscribe.Lock()
 	defer client.subscribe.Unlock()
@@ -57,7 +57,7 @@ func Subscribe(virtualTopic string, handler func(event interface{}) error) error
 	}
 	client.subscriptions = append(client.subscriptions, subscription)
 	client.consumers.Add(1)
-	go consume(&client, subscription, handler)
+	go consume(&client, subscription, handlers)
 	return nil
 }
 
@@ -67,7 +67,7 @@ func Send(destination string, message interface{}) error {
 	return client.connection.FailoverSend("/topic/"+destination, message)
 }
 
-func consume(client *Client, subscription *stomp.Subscription, handler func(event interface{}) error) {
+func consume(client *Client, subscription *stomp.Subscription, handlers []func(event interface{}) error) {
 	defer client.consumers.Done()
 	for subscription.Active() {
 		msg, err := subscription.Read()
@@ -80,8 +80,10 @@ func consume(client *Client, subscription *stomp.Subscription, handler func(even
 			break
 		}
 		logging.Infof("New message from %s, adding new handler for it", subscription.Destination())
-		client.handlers.Add(1)
-		go handle(client, msg, handler)
+		for _, handler := range handlers {
+			client.handlers.Add(1)
+			go handle(client, msg, handler)
+		}
 	}
 	logging.Debugf("Finalize consumer for subscription %s", subscription.Destination())
 }
