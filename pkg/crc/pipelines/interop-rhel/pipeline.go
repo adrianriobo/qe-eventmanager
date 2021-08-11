@@ -5,6 +5,9 @@ import (
 
 	crcPipelines "github.com/adrianriobo/qe-eventmanager/pkg/crc/pipelines"
 	"github.com/adrianriobo/qe-eventmanager/pkg/services/ci/pipelines"
+	"github.com/adrianriobo/qe-eventmanager/pkg/util/http"
+	"github.com/adrianriobo/qe-eventmanager/pkg/util/logging"
+	"github.com/adrianriobo/qe-eventmanager/pkg/util/xunit"
 
 	v1beta1 "github.com/tektoncd/pipeline/pkg/apis/pipeline/v1beta1"
 	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -41,7 +44,7 @@ func Run(rhelVersion, repoBaseos, repoAppStream, imageID string) (string, string
 	return pipelinerun.GetName(),
 		xunitURL,
 		getResultValue(runStatus.PipelineResults, qeDurationResultName),
-		resultStatusPassed,
+		getResultState(xunitURL),
 		nil
 }
 
@@ -56,22 +59,22 @@ func getResultValue(results []v1beta1.PipelineRunResult, resultParamID string) s
 }
 
 // TODO this should be moved to result parameter from the pipeline
-// func getResultState(url string) string {
-// 	file, err := http.GetFile(url)
-// 	if err != nil {
-// 		logging.Error(err)
-// 		return ""
-// 	}
-// 	count, err := xunit.CountFailures(file)
-// 	if err != nil {
-// 		logging.Error(err)
-// 		return ""
-// 	}
-// 	if count == 0 {
-// 		return resultStatusPassed
-// 	}
-// 	return resultStatusFailed
-// }
+func getResultState(url string) string {
+	file, err := http.GetFile(url)
+	if err != nil {
+		logging.Error(err)
+		return ""
+	}
+	count, err := xunit.CountFailures(file)
+	if err != nil {
+		logging.Error(err)
+		return ""
+	}
+	if count == 0 {
+		return resultStatusPassed
+	}
+	return resultStatusFailed
+}
 
 func getSpec(rhelVersion, repoBaseos, repoAppStream, imageID string) *v1beta1.PipelineRun {
 	return &v1beta1.PipelineRun{
