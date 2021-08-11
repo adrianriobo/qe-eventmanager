@@ -9,10 +9,8 @@ import (
 )
 
 const (
-	topicTestComplete string = "VirtualTopic.qe.ci.product-scenario.vipatel.test.complete"
-
-	// topicTestComplete  string = "VirtualTopic.qe.ci.product-scenario.test.complete"
-	// testError     string = "VirtualTopic.qe.ci.product-scenario.ascerra.test.error"
+	topicTestComplete string = "VirtualTopic.qe.ci.product-scenario.test.complete"
+	// testError     string = "VirtualTopic.qe.ci.product-scenario.test.error"
 
 	baseosRepositoryName    string = "baseos"
 	appstreamRepositoryName string = "appstream"

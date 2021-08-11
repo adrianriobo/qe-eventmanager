@@ -15,7 +15,7 @@ import (
 
 const (
 	topicTestComplete string = "VirtualTopic.qe.ci.product-scenario.test.complete"
-	// testError     string = "VirtualTopic.qe.ci.product-scenario.ascerra.test.error"
+	// testError     string = "VirtualTopic.qe.ci.product-scenario.test.error"
 )
 
 var (
