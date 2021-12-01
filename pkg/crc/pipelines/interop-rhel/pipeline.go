@@ -5,9 +5,7 @@ import (
 
 	crcPipelines "github.com/adrianriobo/qe-eventmanager/pkg/crc/pipelines"
 	"github.com/adrianriobo/qe-eventmanager/pkg/services/ci/pipelines"
-	"github.com/adrianriobo/qe-eventmanager/pkg/util/http"
-	"github.com/adrianriobo/qe-eventmanager/pkg/util/logging"
-	"github.com/adrianriobo/qe-eventmanager/pkg/util/xunit"
+	commonPipelines "github.com/adrianriobo/qe-eventmanager/pkg/util/pipelines"
 
 	v1beta1 "github.com/tektoncd/pipeline/pkg/apis/pipeline/v1beta1"
 	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -24,9 +22,6 @@ const (
 
 	xunitURLResultName   string = "results-url"
 	qeDurationResultName string = "qe-duration"
-
-	resultStatusPassed string = "passed"
-	resultStatusFailed string = "failed"
 )
 
 func Run(rhelVersion, repoBaseos, repoAppStream, imageID string) (string, string, string, string, error) {
@@ -40,40 +35,12 @@ func Run(rhelVersion, repoBaseos, repoAppStream, imageID string) (string, string
 	defer close(informerStopper)
 	go pipelines.AddInformer(crcPipelines.Namespace, pipelinerun.GetName(), status, informerStopper)
 	runStatus := <-status
-	xunitURL := getResultValue(runStatus.PipelineResults, xunitURLResultName)
+	xunitURL := commonPipelines.GetResultValue(runStatus.PipelineResults, xunitURLResultName)
 	return pipelinerun.GetName(),
 		xunitURL,
-		getResultValue(runStatus.PipelineResults, qeDurationResultName),
-		getResultState(xunitURL),
+		commonPipelines.GetResultValue(runStatus.PipelineResults, qeDurationResultName),
+		commonPipelines.GetResultState(xunitURL),
 		nil
-}
-
-// TODO make general vailable
-func getResultValue(results []v1beta1.PipelineRunResult, resultParamID string) string {
-	for _, result := range results {
-		if result.Name == resultParamID {
-			return result.Value
-		}
-	}
-	return ""
-}
-
-// TODO this should be moved to result parameter from the pipeline
-func getResultState(url string) string {
-	file, err := http.GetFile(url)
-	if err != nil {
-		logging.Error(err)
-		return ""
-	}
-	count, err := xunit.CountFailures(file)
-	if err != nil {
-		logging.Error(err)
-		return ""
-	}
-	if count == 0 {
-		return resultStatusPassed
-	}
-	return resultStatusFailed
 }
 
 func getSpec(rhelVersion, repoBaseos, repoAppStream, imageID string) *v1beta1.PipelineRun {
