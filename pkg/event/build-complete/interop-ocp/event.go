@@ -1,14 +1,9 @@
 package interopOCP
 
 import (
-	"fmt"
-	"strings"
-	"time"
-
 	interopPipelineOCP "github.com/adrianriobo/qe-eventmanager/pkg/crc/pipelines/interop-ocp"
 	buildComplete "github.com/adrianriobo/qe-eventmanager/pkg/event/build-complete"
 	"github.com/adrianriobo/qe-eventmanager/pkg/services/messaging/umb"
-	"github.com/adrianriobo/qe-eventmanager/pkg/util"
 	"github.com/adrianriobo/qe-eventmanager/pkg/util/logging"
 	"github.com/mitchellh/mapstructure"
 )
@@ -16,14 +11,6 @@ import (
 const (
 	topicTestComplete string = "VirtualTopic.qe.ci.product-scenario.test.complete"
 	// testError     string = "VirtualTopic.qe.ci.product-scenario.test.error"
-)
-
-var (
-	serversids []string = []string{"macos14-brno", "macos15-brno", "windows10-brno", "rhel8-brno"}
-	platforms  []string = []string{"fedora33", "rhel79", "rhel83"}
-	files      []string = []string{"basic.xml", "config.xml", "story_health.xml",
-		"story_marketplace.xml", "story_registry.xml", "cert_rotation.xml",
-		"proxy.xml", "integration.xml"}
 )
 
 type ProductScenarioBuild struct {
@@ -52,21 +39,19 @@ func (p ProductScenarioBuild) Handler(event interface{}) error {
 	}
 	// Filtering this will be improved in future versions
 	if len(openshiftVersion) > 0 && codereadyContainersMessage {
-		name, correlation, _, err :=
-			interopPipelineOCP.Run(openshiftVersion, util.GenerateCorrelation(),
-				strings.Join(serversids[:], ","),
-				strings.Join(platforms[:], ","))
+		name, xunitURL, duration, resultStatus, err :=
+			interopPipelineOCP.Run(openshiftVersion)
 		if err != nil {
 			logging.Error(err)
 		}
 		// We will take info from status to send back the results
-		response := buildResponse(name, correlation, &data)
+		response := buildResponse(name, xunitURL, duration, resultStatus, &data)
 		return umb.Send(topicTestComplete, response)
 	}
 	return nil
 }
 
-func buildResponse(name, correlation string, source *BuildComplete) *TestComplete {
+func buildResponse(name, xunitURL, duration, resultStatus string, source *BuildComplete) *TestComplete {
 	return &TestComplete{
 		Artifact: source.Artifact,
 		Run: buildComplete.Run{
@@ -76,24 +61,8 @@ func buildResponse(name, correlation string, source *BuildComplete) *TestComplet
 			Category:  "interoperability",
 			Namespace: "interop",
 			TestType:  "product-scenario",
-			Result:    "passed",
-			Runtime:   "1800",
-			XunitUrls: xunitFilesUrls(correlation)},
+			Result:    resultStatus,
+			Runtime:   duration,
+			XunitUrls: []string{xunitURL}},
 	}
-}
-
-func xunitFilesUrls(correlation string) []string {
-	var xunitUrls []string
-	datalakeUrl := "http://10.0.110.220:9000/logs"
-	t := time.Now().Local()
-	logsDate := fmt.Sprint(t.Format("20060102"))
-	servers := append(serversids, platforms...)
-	for _, server := range servers {
-		for _, file := range files {
-			url := fmt.Sprintf("%s/%s/%s/%s/%s",
-				datalakeUrl, logsDate, correlation, server, file)
-			xunitUrls = append(xunitUrls, url)
-		}
-	}
-	return xunitUrls
 }
