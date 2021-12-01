@@ -1,6 +1,6 @@
 module github.com/adrianriobo/qe-eventmanager
 
-go 1.14
+go 1.16
 
 require (
 	github.com/go-stomp/stomp v2.1.4+incompatible
