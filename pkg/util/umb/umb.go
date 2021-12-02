@@ -61,7 +61,7 @@ func (c *UMBConnection) Connect() error {
 		conn, err = tls.Dial("tcp", url, c.tlsConfig)
 
 		if err == nil {
-			logging.Infof("Established TCP connection to broker")
+			logging.Infof("Established TCP connection to broker %s", url)
 			break
 		}
 		// log.WithField("broker", url).Warning("Connection to broker failed: %s", err.Error())
