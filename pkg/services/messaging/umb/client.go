@@ -9,21 +9,23 @@ import (
 	stomp "github.com/go-stomp/stomp/v3"
 )
 
-const (
-	consumerId string = "Consumer.psi-crcqe-openstack.1231231232."
-)
-
 var (
 	defaultACKMode stomp.AckMode = stomp.AckAuto
 )
 
+type subscriptionManager struct {
+	subscription *stomp.Subscription
+	handlers     []func(event interface{}) error
+}
+
 type Client struct {
-	connection    *umb.UMBConnection
-	subscriptions []*stomp.Subscription
-	consumers     *sync.WaitGroup
-	handlers      *sync.WaitGroup
-	subscribe     sync.Mutex
-	send          sync.Mutex
+	connection           *umb.UMBConnection
+	subscriptionManagers []subscriptionManager
+	consumers            *sync.WaitGroup
+	handlers             *sync.WaitGroup
+	subscribe            sync.Mutex
+	send                 sync.Mutex
+	active               bool
 }
 
 var client Client
@@ -42,23 +44,13 @@ func NewClient(certificateFile, privateKeyFile, caCertsFile string, brokers []st
 	// Initialize waitgroup
 	client.consumers = &sync.WaitGroup{}
 	client.handlers = &sync.WaitGroup{}
+	client.active = true
 	return nil
 }
 
-// TODO add selector based on regex??
-func Subscribe(virtualTopic string, handlers []func(event interface{}) error) error {
-	destination := consumerId + virtualTopic
-	client.subscribe.Lock()
-	defer client.subscribe.Unlock()
-	logging.Infof("Adding a subscription to %s", virtualTopic)
-	subscription, err := client.connection.FailoverSubscribe(destination, defaultACKMode)
-	if err != nil {
-		return err
-	}
-	client.subscriptions = append(client.subscriptions, subscription)
-	client.consumers.Add(1)
-	go consume(&client, subscription, handlers)
-	return nil
+func Subscribe(consumerId, virtualTopic string, handlers []func(event interface{}) error) error {
+	destination := consumerId + "." + virtualTopic
+	return addSubscription(destination, handlers)
 }
 
 func Send(destination string, message interface{}) error {
@@ -67,14 +59,38 @@ func Send(destination string, message interface{}) error {
 	return client.connection.FailoverSend("/topic/"+destination, message)
 }
 
+func GracefullShutdown() {
+	client.active = false
+	for _, subscriptionManager := range client.subscriptionManagers {
+		if err := subscriptionManager.subscription.Unsubscribe(); err != nil {
+			logging.Error(err)
+		}
+		logging.Infof("Unsubscribing %s", subscriptionManager.subscription.Destination())
+	}
+	client.consumers.Wait()
+	client.handlers.Wait()
+	client.connection.Disconnect()
+	logging.Infof("Client disconnected from UMB")
+}
+
 func consume(client *Client, subscription *stomp.Subscription, handlers []func(event interface{}) error) {
 	defer client.consumers.Done()
 	for subscription.Active() {
 		msg, err := subscription.Read()
 		if err != nil {
 			if !subscription.Active() {
-				logging.Debugf("Read message from inactive subscription %s", subscription.Destination())
-				break
+				if client.active {
+					logging.Debugf("Reconnecting from failing subscription %s", subscription.Destination())
+					if err = reconnect(client, subscription.Id()); err != nil {
+						logging.Errorf("Error reconnecting from topic: %s. %s", subscription.Destination(), err)
+						break
+					}
+				} else {
+					// Should manage if the case is for the gracefull unsubscription or some error
+					//...as so a new subscription should be managed
+					logging.Debugf("Read message from inactive subscription %s", subscription.Destination())
+					break
+				}
 			}
 			logging.Errorf("Error reading from topic: %s. %s", subscription.Destination(), err)
 			break
@@ -88,6 +104,37 @@ func consume(client *Client, subscription *stomp.Subscription, handlers []func(e
 	logging.Debugf("Finalize consumer for subscription %s", subscription.Destination())
 }
 
+func reconnect(client *Client, subscriptionId string) error {
+	subscriptionManager := findSubscription(subscriptionId)
+	return addSubscription(subscriptionManager.subscription.Destination(), subscriptionManager.handlers)
+}
+
+func addSubscription(destination string, handlers []func(event interface{}) error) error {
+	client.subscribe.Lock()
+	var subscriptionManager subscriptionManager
+	defer client.subscribe.Unlock()
+	logging.Infof("Adding a subscription to %s", destination)
+	subscription, err := client.connection.FailoverSubscribe(destination, defaultACKMode)
+	if err != nil {
+		return err
+	}
+	subscriptionManager.subscription = subscription
+	subscriptionManager.handlers = handlers
+	client.subscriptionManagers = append(client.subscriptionManagers, subscriptionManager)
+	client.consumers.Add(1)
+	go consume(&client, subscription, handlers)
+	return nil
+}
+
+func findSubscription(subscriptionId string) subscriptionManager {
+	for _, subscriptionManager := range client.subscriptionManagers {
+		if subscriptionManager.subscription.Id() == subscriptionId {
+			return subscriptionManager
+		}
+	}
+	return subscriptionManager{}
+}
+
 func handle(client *Client, msg *stomp.Message, handler func(event interface{}) error) {
 	defer client.handlers.Done()
 	// heavy consuming may regex over string, jsonpath
@@ -99,18 +146,4 @@ func handle(client *Client, msg *stomp.Message, handler func(event interface{}) 
 	if err := handler(event); err != nil {
 		logging.Error(err)
 	}
-}
-
-func GracefullShutdown() {
-	for _, subscription := range client.subscriptions {
-		if err := subscription.Unsubscribe(); err != nil {
-			logging.Error(err)
-			// Force consume as finished ?
-		}
-		logging.Infof("Unsubscribing %s", subscription.Destination())
-	}
-	client.consumers.Wait()
-	client.handlers.Wait()
-	client.connection.Disconnect()
-	logging.Infof("Client disconnected from UMB")
 }
