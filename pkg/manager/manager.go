@@ -13,6 +13,10 @@ import (
 	"github.com/adrianriobo/qe-eventmanager/pkg/util/logging"
 )
 
+const (
+	consumerId string = "Consumer.psi-crcqe-openstack.1231231232"
+)
+
 func Initialize(certificateFile, privateKeyFile, caCertsFile, kubeconfigPath string, brokers []string) {
 	// Start pipeline client
 	if err := pipelines.NewClient(kubeconfigPath); err != nil {
@@ -39,7 +43,7 @@ func Initialize(certificateFile, privateKeyFile, caCertsFile, kubeconfigPath str
 }
 
 func handleEvents() error {
-	if err := umb.Subscribe(buildComplete.Topic, []func(event interface{}) error{
+	if err := umb.Subscribe(consumerId, buildComplete.Topic, []func(event interface{}) error{
 		func(event interface{}) error { return interopOCP.New().Handler(event) },
 		func(event interface{}) error { return interopRHEL.New().Handler(event) }}); err != nil {
 		umb.GracefullShutdown()
