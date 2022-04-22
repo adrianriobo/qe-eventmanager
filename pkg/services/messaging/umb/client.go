@@ -73,6 +73,7 @@ func GracefullShutdown() {
 	logging.Infof("Client disconnected from UMB")
 }
 
+// https://github.com/streadway/amqp/issues/133
 func consume(client *Client, subscription *stomp.Subscription, handlers []func(event interface{}) error) {
 	defer client.consumers.Done()
 	for subscription.Active() {
