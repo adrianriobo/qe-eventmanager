@@ -1,30 +1,25 @@
-package messaging
+package stomp
 
 import (
 	"crypto/tls"
-	"crypto/x509"
 	"encoding/json"
 	"errors"
-	"io/ioutil"
 	"time"
 
 	"github.com/adrianriobo/qe-eventmanager/pkg/util/logging"
+	utilTLS "github.com/adrianriobo/qe-eventmanager/pkg/util/tls"
 	"github.com/go-stomp/stomp/v3"
 	"github.com/go-stomp/stomp/v3/frame"
 )
 
-type UMBConnection struct {
+type Connection struct {
 	FailoverRetryCount uint
 	FailoverRetryDelay float32
-
-	ssl_cert_path string
-	ssl_key_path  string
-	ssl_ca_path   string
-	hosts         []string
-	tlsConfig     *tls.Config
-	tlsConn       *tls.Conn
-	stompConn     *stomp.Conn
-	connOpts      []func(*stomp.Conn) error
+	hosts              []string
+	tlsConfig          *tls.Config
+	tlsConn            *tls.Conn
+	stompConn          *stomp.Conn
+	connOpts           []func(*stomp.Conn) error
 }
 
 const (
@@ -32,30 +27,21 @@ const (
 	DefaultFailoverRetryDelay = 0.1
 )
 
-func NewUMBConnection(sslCertPath, sslKeyPath, sslCaPath string, hosts []string, connOpts ...func(*stomp.Conn) error) *UMBConnection {
-	return &UMBConnection{
-		ssl_cert_path:      sslCertPath,
-		ssl_key_path:       sslKeyPath,
-		ssl_ca_path:        sslCaPath,
-		hosts:              hosts,
+func NewConnection(sslCertPath, sslKeyPath, sslCaPath string, hosts []string, connOpts ...func(*stomp.Conn) error) (*Connection, error) {
+	tlsConfig, err := utilTLS.CreateTLSConfig(sslCertPath, sslKeyPath, sslCaPath)
+	if err != nil {
+		return nil, err
+	}
+	return &Connection{
+		tlsConfig:          tlsConfig,
 		connOpts:           connOpts,
 		FailoverRetryCount: DefaultFailoverRetryCount,
 		FailoverRetryDelay: DefaultFailoverRetryDelay,
-	}
+	}, nil
 }
 
-func (c *UMBConnection) Connect() error {
-	if c.tlsConfig == nil {
-		err := c.createTLSConfig()
-		if err != nil {
-			return errors.New("Failed to load SSL certificates: " + err.Error())
-		}
-
-	}
-
+func (c *Connection) Connect() (err error) {
 	var conn *tls.Conn
-	var err error
-
 	for _, url := range c.hosts {
 		logging.Debugf("Connecting to broker")
 		conn, err = tls.Dial("tcp", url, c.tlsConfig)
@@ -83,7 +69,7 @@ func (c *UMBConnection) Connect() error {
 	return nil
 }
 
-func (c *UMBConnection) FailoverSend(destination string, body interface{}, opts ...func(*frame.Frame) error) error {
+func (c *Connection) FailoverSend(destination string, body interface{}, opts ...func(*frame.Frame) error) error {
 	var retryCount uint
 
 	jsonData, err := json.Marshal(body)
@@ -115,7 +101,7 @@ func (c *UMBConnection) FailoverSend(destination string, body interface{}, opts 
 	return err
 }
 
-func (c *UMBConnection) FailoverSubscribe(destination string, ack stomp.AckMode, opts ...func(*frame.Frame) error) (*stomp.Subscription, error) {
+func (c *Connection) FailoverSubscribe(destination string, ack stomp.AckMode, opts ...func(*frame.Frame) error) (*stomp.Subscription, error) {
 	var (
 		sub        *stomp.Subscription
 		err        error
@@ -144,7 +130,7 @@ func (c *UMBConnection) FailoverSubscribe(destination string, ack stomp.AckMode,
 	return sub, err
 }
 
-func (c *UMBConnection) Disconnect() {
+func (c *Connection) Disconnect() {
 	if c.stompConn != nil {
 		err := c.stompConn.Disconnect()
 		if err != nil {
@@ -154,31 +140,4 @@ func (c *UMBConnection) Disconnect() {
 	if c.tlsConn != nil {
 		c.tlsConn.Close()
 	}
-}
-
-func (c *UMBConnection) createTLSConfig() error {
-	// Load client cert
-	cert, err := tls.LoadX509KeyPair(c.ssl_cert_path, c.ssl_key_path)
-	if err != nil {
-		return errors.New("Failed to load ssl cert/key from: " + c.ssl_cert_path + ", " + c.ssl_key_path)
-	}
-	logging.Debugf("Cert and key loaded successfully")
-
-	// Load CA cert
-	caCert, err := ioutil.ReadFile(c.ssl_ca_path)
-	if err != nil {
-		return errors.New("Failed to load ssl CA bundle: " + c.ssl_ca_path)
-	}
-	caCertPool := x509.NewCertPool()
-	caCertPool.AppendCertsFromPEM(caCert)
-
-	// Setup HTTPS client
-	tlsConfig := &tls.Config{
-		Certificates: []tls.Certificate{cert},
-		RootCAs:      caCertPool,
-		// ca certs is now well set
-		// InsecureSkipVerify: true,
-	}
-	c.tlsConfig = tlsConfig
-	return nil
 }

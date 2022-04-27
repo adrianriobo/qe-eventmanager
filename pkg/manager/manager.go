@@ -14,7 +14,11 @@ import (
 )
 
 const (
-	consumerId string = "Consumer.psi-crcqe-openstack.1231231232"
+	// old
+	// consumerId string = "Consumer.psi-crcqe-openstack.1231231232"
+	// Move this to configmap
+	consumerId = "psi-crcqe-openstack"
+	protocol   = umb.Stomp
 )
 
 func Initialize(certificateFile, privateKeyFile, caCertsFile, kubeconfigPath string, brokers []string) {
@@ -25,7 +29,7 @@ func Initialize(certificateFile, privateKeyFile, caCertsFile, kubeconfigPath str
 	}
 
 	// Start umb client
-	if err := umb.NewClient(certificateFile, privateKeyFile, caCertsFile, brokers); err != nil {
+	if err := umb.CreateClient(consumerId, protocol, certificateFile, privateKeyFile, caCertsFile, brokers); err != nil {
 		logging.Error(err)
 		os.Exit(1)
 	}
@@ -43,7 +47,7 @@ func Initialize(certificateFile, privateKeyFile, caCertsFile, kubeconfigPath str
 }
 
 func handleEvents() error {
-	if err := umb.Subscribe(consumerId, buildComplete.Topic, []func(event interface{}) error{
+	if err := umb.Subscribe(buildComplete.Topic, []func(event interface{}) error{
 		func(event interface{}) error { return interopOCP.New().Handler(event) },
 		func(event interface{}) error { return interopRHEL.New().Handler(event) }}); err != nil {
 		umb.GracefullShutdown()

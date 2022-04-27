@@ -3,6 +3,7 @@ module github.com/adrianriobo/qe-eventmanager
 go 1.16
 
 require (
+	github.com/Azure/go-amqp v0.17.4 // indirect
 	github.com/go-stomp/stomp v2.1.4+incompatible
 	github.com/go-stomp/stomp/v3 v3.0.0
 	github.com/gobuffalo/envy v1.7.1 // indirect
