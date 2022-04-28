@@ -13,23 +13,17 @@ import (
 	"github.com/adrianriobo/qe-eventmanager/pkg/util/logging"
 )
 
-const (
-	// old
-	// consumerId string = "Consumer.psi-crcqe-openstack.1231231232"
-	// Move this to configmap
-	consumerId = "psi-crcqe-openstack"
-	protocol   = umb.Stomp
-)
-
-func Initialize(certificateFile, privateKeyFile, caCertsFile, kubeconfigPath string, brokers []string) {
-	// Start pipeline client
+func Initialize(consumerID, protocol string, brokers []string, certificateFile,
+	privateKeyFile, caCertsFile, kubeconfigPath string) {
+	// Create pipeline client
 	if err := pipelines.NewClient(kubeconfigPath); err != nil {
 		logging.Error(err)
 		os.Exit(1)
 	}
 
-	// Start umb client
-	if err := umb.CreateClient(consumerId, protocol, certificateFile, privateKeyFile, caCertsFile, brokers); err != nil {
+	// Create umb client
+	if err := umb.CreateClient(consumerID, protocol, brokers,
+		certificateFile, privateKeyFile, caCertsFile); err != nil {
 		logging.Error(err)
 		os.Exit(1)
 	}

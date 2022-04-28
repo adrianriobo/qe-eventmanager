@@ -3,6 +3,6 @@ package umb
 type Protocol int
 
 const (
-	Stomp Protocol = iota
-	Activemq
+	Stomp string = "stomp"
+	Amqp  string = "amqp"
 )

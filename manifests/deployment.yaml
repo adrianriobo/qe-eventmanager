@@ -24,6 +24,16 @@ spec:
             secretKeyRef:
               name: qe-eventmanager-config
               key: brokers
+        - name: CONSUMER_ID
+          valueFrom:
+            secretKeyRef:
+              name: qe-eventmanager-config
+              key: consumerid
+        - name: DRIVER
+          valueFrom:
+            secretKeyRef:
+              name: qe-eventmanager-config
+              key: driver
         - name: CA   
           value: /etc/qe-eventmanager/ca.crt
         - name: CERTIFICATE   
