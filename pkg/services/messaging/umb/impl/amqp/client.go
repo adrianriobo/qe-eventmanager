@@ -17,6 +17,7 @@ type Client struct {
 	Session *amqp.Session
 }
 
+// https://stackoverflow.com/questions/67491806/how-do-you-connect-to-an-amqp-1-0-topic-not-queue-in-golang
 type Subscription struct {
 	Receiver *amqp.Receiver
 }

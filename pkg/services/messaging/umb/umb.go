@@ -32,12 +32,12 @@ type subscription struct {
 
 var _umb umb
 
-func CreateClient(consumerID string, protocol Protocol, certificateFile, privateKeyFile, caCertsFile string, brokers []string) (err error) {
+func CreateClient(consumerID, protocol string, brokers []string, certificateFile, privateKeyFile, caCertsFile string) (err error) {
 	_umb.consumerID = consumerID
 	_umb.consumers = &sync.WaitGroup{}
 	_umb.handlers = &sync.WaitGroup{}
 	_umb.active = true
-	_umb.client, err = createClient(protocol, certificateFile, privateKeyFile, caCertsFile, brokers)
+	_umb.client, err = createClient(protocol, brokers, certificateFile, privateKeyFile, caCertsFile)
 	return
 }
 
@@ -80,14 +80,15 @@ func GracefullShutdown() {
 	logging.Infof("Client disconnected from UMB")
 }
 
-func createClient(protocol Protocol, certificateFile, privateKeyFile, caCertsFile string, brokers []string) (api.ClientInterface, error) {
+func createClient(protocol string, brokers []string, certificateFile, privateKeyFile, caCertsFile string) (api.ClientInterface, error) {
 	switch protocol {
 	case Stomp:
 		return stomp.Create(certificateFile, privateKeyFile, caCertsFile, brokers)
-	default:
+	case Amqp:
 		return amqp.Create(certificateFile, privateKeyFile, caCertsFile, brokers)
+	default:
+		return nil, fmt.Errorf("%s is not supported", protocol)
 	}
-
 }
 
 func consume(subscription *subscription) {
