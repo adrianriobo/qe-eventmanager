@@ -27,9 +27,19 @@ func Create(certificateFile, privateKeyFile, caCertsFile string, brokers []strin
 	if err != nil {
 		return nil, err
 	}
-	client, err := amqp.Dial("", amqp.ConnTLSConfig(tlsConfig))
-	if err != nil {
-		return nil, err
+	var client *amqp.Client
+	for _, url := range brokers {
+		logging.Debugf("Connecting to broker %s", url)
+		client, err = amqp.Dial("", amqp.ConnTLSConfig(tlsConfig))
+		if err == nil {
+			logging.Debugf("Established TCP connection to broker %s", url)
+			break
+		}
+		// log.WithField("broker", url).Warning("Connection to broker failed: %s", err.Error())
+		logging.Debugf("Connection to broker failed: %v", err)
+	}
+	if client == nil {
+		return nil, fmt.Errorf("unable to establish connection for provided brokers")
 	}
 	session, err := client.NewSession()
 	if err != nil {

@@ -34,6 +34,7 @@ func NewConnection(sslCertPath, sslKeyPath, sslCaPath string, hosts []string, co
 	}
 	return &Connection{
 		tlsConfig:          tlsConfig,
+		hosts:              hosts,
 		connOpts:           connOpts,
 		FailoverRetryCount: DefaultFailoverRetryCount,
 		FailoverRetryDelay: DefaultFailoverRetryDelay,
