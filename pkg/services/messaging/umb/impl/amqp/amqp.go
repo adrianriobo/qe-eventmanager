@@ -30,7 +30,7 @@ func Create(certificateFile, privateKeyFile, caCertsFile string, brokers []strin
 	var client *amqp.Client
 	for _, url := range brokers {
 		logging.Debugf("Connecting to broker %s", url)
-		client, err = amqp.Dial("", amqp.ConnTLSConfig(tlsConfig))
+		client, err = amqp.Dial(url, amqp.ConnTLSConfig(tlsConfig))
 		if err == nil {
 			logging.Debugf("Established TCP connection to broker %s", url)
 			break
