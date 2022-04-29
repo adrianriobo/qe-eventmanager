@@ -12,27 +12,31 @@ import (
 	"github.com/adrianriobo/qe-eventmanager/pkg/util/tls"
 )
 
+const schema = "amqp+ssl"
+
 type Client struct {
 	Client  *amqp.Client
 	Session *amqp.Session
 }
 
-// https://stackoverflow.com/questions/67491806/how-do-you-connect-to-an-amqp-1-0-topic-not-queue-in-golang
 type Subscription struct {
 	Receiver *amqp.Receiver
 }
 
-func Create(certificateFile, privateKeyFile, caCertsFile string, brokers []string) (api.ClientInterface, error) {
-	tlsConfig, err := tls.CreateTLSConfig(certificateFile, privateKeyFile, caCertsFile)
+func Create(certificateFile, privateKeyFile, caCertsFile string,
+	brokers []string) (api.ClientInterface, error) {
+	tlsConfig, err :=
+		tls.CreateTLSConfig(certificateFile, privateKeyFile, caCertsFile)
 	if err != nil {
 		return nil, err
 	}
 	var client *amqp.Client
-	for _, url := range brokers {
-		logging.Debugf("Connecting to broker %s", url)
-		client, err = amqp.Dial(url, amqp.ConnTLSConfig(tlsConfig))
+	for _, broker := range brokers {
+		address := fmt.Sprintf("%s://%s", schema, broker)
+		logging.Debugf("Connecting to broker %s", address)
+		client, err = amqp.Dial(address, amqp.ConnTLSConfig(tlsConfig))
 		if err == nil {
-			logging.Debugf("Established TCP connection to broker %s", url)
+			logging.Debugf("Established TCP connection to broker %s", address)
 			break
 		}
 		// log.WithField("broker", url).Warning("Connection to broker failed: %s", err.Error())
@@ -63,7 +67,8 @@ func (s Subscription) Unsubscribe() (err error) {
 	return
 }
 
-func (c *Client) Subscribe(destination string, handlers []func(event interface{}) error) (api.SubscriptionInterface, error) {
+func (c *Client) Subscribe(destination string,
+	handlers []func(event interface{}) error) (api.SubscriptionInterface, error) {
 	receiver, err := c.Session.NewReceiver(
 		amqp.LinkSourceAddress(destination),
 		amqp.LinkCredit(10),
