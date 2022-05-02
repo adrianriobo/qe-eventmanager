@@ -59,6 +59,9 @@ func (s Subscription) Read() ([]byte, error) {
 	if err != nil {
 		return nil, err
 	}
+	if err = s.Receiver.AcceptMessage(context.TODO(), msg); err != nil {
+		return nil, err
+	}
 	return msg.GetData(), nil
 }
 
