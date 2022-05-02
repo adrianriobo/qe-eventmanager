@@ -59,8 +59,10 @@ func (s Subscription) Read() ([]byte, error) {
 	if err != nil {
 		return nil, err
 	}
-	if err = s.Receiver.AcceptMessage(context.TODO(), msg); err != nil {
-		return nil, err
+	// msg.GetData() is nil
+	if msg.GetData() == nil {
+		logging.Errorf("msg data is nil")
+		return []byte(fmt.Sprintf("%v", msg.Value)), nil
 	}
 	return msg.GetData(), nil
 }
