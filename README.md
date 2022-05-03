@@ -24,9 +24,9 @@ umb:
   consumerID: foo
   driver: amqp
   brokers: broker1:5556,broker2:5556
-  userCertificate-data: XXXXXXX
-  userKey-data: XXXXX
-  certificateAuthority-data: XXXXXX
+  userCertificate: XXXXXXX # encoded as base64
+  userKey: XXXXX # encoded as base64
+  certificateAuthority: XXXXXX # encoded as base64
 tekton:
   namespace: myNamespace
   workspaces:
@@ -34,7 +34,7 @@ tekton:
     pvc: pvc1
   - name: workspace2
     pvc: pvc2
-  kubeconfig-data: XXXXXX # This value is optional is used to connect to remote cluster
+  kubeconfig: XXXXXX # This value is optional is used to connect to remote cluster, should be encoded as base64
                           # Otherwise eventmanager can rely on RBAC when running inside the cluster
 ```
 
