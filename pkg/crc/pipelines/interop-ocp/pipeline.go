@@ -4,8 +4,8 @@ import (
 	"fmt"
 
 	crcPipelines "github.com/adrianriobo/qe-eventmanager/pkg/crc/pipelines"
-	"github.com/adrianriobo/qe-eventmanager/pkg/services/ci/pipelines"
-	commonPipelines "github.com/adrianriobo/qe-eventmanager/pkg/util/pipelines"
+	"github.com/adrianriobo/qe-eventmanager/pkg/services/ci/tekton"
+	tektonUtil "github.com/adrianriobo/qe-eventmanager/pkg/util/tekton"
 
 	v1beta1 "github.com/tektoncd/pipeline/pkg/apis/pipeline/v1beta1"
 	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -22,7 +22,7 @@ const (
 )
 
 func Run(ocpVersion string) (string, string, string, string, error) {
-	pipelinerun, err := pipelines.CreatePipelinerun(crcPipelines.Namespace, getSpec(ocpVersion))
+	pipelinerun, err := tekton.CreatePipelinerun(crcPipelines.Namespace, getSpec(ocpVersion))
 	if err != nil {
 		return "", "", "", "", err
 	}
@@ -30,13 +30,13 @@ func Run(ocpVersion string) (string, string, string, string, error) {
 	informerStopper := make(chan struct{})
 	defer close(status)
 	defer close(informerStopper)
-	go pipelines.AddInformer(crcPipelines.Namespace, pipelinerun.GetName(), status, informerStopper)
+	go tekton.AddInformer(crcPipelines.Namespace, pipelinerun.GetName(), status, informerStopper)
 	runStatus := <-status
-	xunitURL := commonPipelines.GetResultValue(runStatus.PipelineResults, xunitURLResultName)
+	xunitURL := tektonUtil.GetResultValue(runStatus.PipelineResults, xunitURLResultName)
 	return pipelinerun.GetName(),
 		xunitURL,
-		commonPipelines.GetResultValue(runStatus.PipelineResults, qeDurationResultName),
-		commonPipelines.GetResultState(xunitURL),
+		tektonUtil.GetResultValue(runStatus.PipelineResults, qeDurationResultName),
+		tektonUtil.GetResultState(xunitURL),
 		nil
 }
 

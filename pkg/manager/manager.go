@@ -3,29 +3,44 @@ package manager
 import (
 	"os"
 	"os/signal"
+	"strings"
 	"syscall"
+
+	"encoding/base64"
 
 	buildComplete "github.com/adrianriobo/qe-eventmanager/pkg/event/build-complete"
 	interopOCP "github.com/adrianriobo/qe-eventmanager/pkg/event/build-complete/interop-ocp"
 	interopRHEL "github.com/adrianriobo/qe-eventmanager/pkg/event/build-complete/interop-rhel"
-	"github.com/adrianriobo/qe-eventmanager/pkg/services/ci/pipelines"
+	"github.com/adrianriobo/qe-eventmanager/pkg/manager/providers"
+	"github.com/adrianriobo/qe-eventmanager/pkg/manager/rules"
+	"github.com/adrianriobo/qe-eventmanager/pkg/services/ci/tekton"
 	"github.com/adrianriobo/qe-eventmanager/pkg/services/messaging/umb"
+	"github.com/adrianriobo/qe-eventmanager/pkg/util/file"
 	"github.com/adrianriobo/qe-eventmanager/pkg/util/logging"
 )
 
-func Initialize(consumerID, protocol string, brokers []string, certificateFile,
-	privateKeyFile, caCertsFile, kubeconfigPath string) {
+func Initialize(providersFilePath string, rulesFilePath []string) {
+
+	providers, rules, err := loadFiles(providersFilePath, rulesFilePath)
+	if err != nil {
+		logging.Errorf("%v", err)
+		os.Exit(1)
+	}
+
 	// Create pipeline client
-	if err := pipelines.NewClient(kubeconfigPath); err != nil {
+	if err := createTektonClient(providers.Tekton); err != nil {
 		logging.Error(err)
 		os.Exit(1)
 	}
 
 	// Create umb client
-	if err := umb.CreateClient(consumerID, protocol, brokers,
-		certificateFile, privateKeyFile, caCertsFile); err != nil {
+	if err := createUMBClient(providers.UMB); err != nil {
 		logging.Error(err)
 		os.Exit(1)
+	}
+
+	if len(*rules) > 0 {
+		logging.Debugf("Printing rules content: %v", rules)
 	}
 
 	// Handle events
@@ -40,16 +55,6 @@ func Initialize(consumerID, protocol string, brokers []string, certificateFile,
 	os.Exit(0)
 }
 
-func handleEvents() error {
-	if err := umb.Subscribe(buildComplete.Topic, []func(event interface{}) error{
-		func(event interface{}) error { return interopOCP.New().Handler(event) },
-		func(event interface{}) error { return interopRHEL.New().Handler(event) }}); err != nil {
-		umb.GracefullShutdown()
-		return err
-	}
-	return nil
-}
-
 func waitForStop() {
 	s := make(chan os.Signal, 1)
 	signal.Notify(s,
@@ -62,4 +67,89 @@ func waitForStop() {
 func stop() {
 	umb.GracefullShutdown()
 	logging.Info("Event manager was gracefully stopped. Enjoy your day!")
+}
+
+func loadFiles(providersFilePath string, rulesFilePath []string) (*providers.Providers, *[]rules.Rule, error) {
+	var structuredProviders providers.Providers
+	var structuredRules []rules.Rule
+	if len(providersFilePath) > 0 {
+		if err := file.LoadFileAsStruct(providersFilePath, &structuredProviders); err != nil {
+			logging.Errorf("Can not load providers file: %v", err)
+			return nil, nil, err
+		}
+	}
+	if len(rulesFilePath) > 0 {
+		for _, ruleFilePath := range rulesFilePath {
+			if len(ruleFilePath) > 0 {
+				var rule rules.Rule
+				if err := file.LoadFileAsStruct(ruleFilePath, &rule); err != nil {
+					// Should try to keep loading remaining rules if exist
+					logging.Errorf("Can not load rules file: %v", err)
+					return nil, nil, err
+				}
+				structuredRules = append(structuredRules, rule)
+			}
+		}
+	}
+	return &structuredProviders, &structuredRules, nil
+}
+
+func createTektonClient(info providers.Tekton) (err error) {
+	var workspaces []tekton.WorkspaceBinding
+	if len(info.Workspaces) > 0 {
+		for _, item := range info.Workspaces {
+			var adaptedItem tekton.WorkspaceBinding
+			adaptedItem.Name = item.Name
+			adaptedItem.PVC = item.PVC
+			workspaces = append(workspaces, adaptedItem)
+		}
+	}
+
+	kubeconfig, err := base64.StdEncoding.DecodeString(info.Kubeconfig)
+	if err != nil {
+		logging.Debugf("%s", string(kubeconfig))
+		err = tekton.CreateClient(kubeconfig, info.Namespace, workspaces)
+	}
+	return
+}
+
+func createUMBClient(info providers.UMB) (err error) {
+	userCertificate, err :=
+		base64.StdEncoding.DecodeString(info.UserCertificate)
+	if err != nil {
+		return
+	}
+	userKey, err :=
+		base64.StdEncoding.DecodeString(info.UserKey)
+	if err != nil {
+		return
+	}
+	certificateAuthority, err :=
+		base64.StdEncoding.DecodeString(info.CertificateAuthority)
+	if err != nil {
+		return
+	}
+	err = umb.CreateClient(
+		info.ConsumerID,
+		info.Driver,
+		strings.Split(info.Brokers, ","),
+		userCertificate,
+		userKey,
+		certificateAuthority)
+	return
+}
+
+// func addRules(rules []rules.Rule) error {
+// 	for _, rule := range rules {
+// 		rule.Input.
+// 	}
+
+func handleEvents() error {
+	if err := umb.Subscribe(buildComplete.Topic, []func(event interface{}) error{
+		func(event interface{}) error { return interopOCP.New().Handler(event) },
+		func(event interface{}) error { return interopRHEL.New().Handler(event) }}); err != nil {
+		umb.GracefullShutdown()
+		return err
+	}
+	return nil
 }

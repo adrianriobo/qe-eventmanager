@@ -1,4 +1,4 @@
-package handler
+package json
 
 import (
 	"github.com/adrianriobo/qe-eventmanager/pkg/util/logging"

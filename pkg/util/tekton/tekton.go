@@ -1,4 +1,4 @@
-package pipelines
+package tekton
 
 import (
 	"github.com/adrianriobo/qe-eventmanager/pkg/util/http"

@@ -19,7 +19,8 @@ type Subscription struct {
 	Subscription *stompv3.Subscription
 }
 
-func Create(certificateFile, privateKeyFile, caCertsFile string, brokers []string) (api.ClientInterface, error) {
+func Create(certificateFile, privateKeyFile, caCertsFile []byte,
+	brokers []string) (api.ClientInterface, error) {
 	connection, err := stomp.NewConnection(
 		certificateFile,
 		privateKeyFile,

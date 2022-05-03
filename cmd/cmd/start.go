@@ -11,25 +11,15 @@ import (
 )
 
 const (
-	consumerID      string = "consumerid"
-	driver          string = "driver"
-	brokers         string = "brokers"
-	certificateFile string = "certificate-file"
-	privateKeyFile  string = "private-key-file"
-	caCertsFile     string = "ca-certs"
-	kubeconfig      string = "kubeconfig"
+	providersFilePath string = "providers-filepath"
+	rulesFilePath     string = "rules-filepath"
 )
 
 func init() {
 	rootCmd.AddCommand(startCmd)
 	flagSet := pflag.NewFlagSet("start", pflag.ExitOnError)
-	flagSet.StringP(consumerID, "", "", "consumerID for UMB. Typically the service accound name")
-	flagSet.StringP(driver, "", "", "driver to connect with UMB: stmop or amqp")
-	flagSet.StringP(brokers, "b", "", "list of brokers acting on failover")
-	flagSet.StringP(certificateFile, "", "", "certificate file for client auth")
-	flagSet.StringP(privateKeyFile, "", "", "key file for client auth")
-	flagSet.StringP(caCertsFile, "", "", "root ca for messageing server auth")
-	flagSet.StringP(kubeconfig, "k", "", "kubeconfig file path")
+	flagSet.StringP(providersFilePath, "p", "", "Credentials and defaults for integrated providers")
+	flagSet.StringP(rulesFilePath, "r", "", "List of comma separated file paths of rules")
 	startCmd.Flags().AddFlagSet(flagSet)
 }
 
@@ -48,11 +38,6 @@ var startCmd = &cobra.Command{
 
 func runStart() {
 	manager.Initialize(
-		viper.GetString(consumerID),
-		viper.GetString(driver),
-		strings.Split(viper.GetString(brokers), ","),
-		viper.GetString(certificateFile),
-		viper.GetString(privateKeyFile),
-		viper.GetString(caCertsFile),
-		viper.GetString(kubeconfig))
+		viper.GetString(providersFilePath),
+		strings.Split(viper.GetString(rulesFilePath), ","))
 }

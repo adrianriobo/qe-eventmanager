@@ -1,14 +1,15 @@
 package rules
 
 type Rule struct {
-	Name   string `yaml:"name"`
-	Input  Input  `yaml:"input"`
-	Action Action `yaml:"action"`
-	Error  Error  `yaml:"error"`
+	Name    string  `yaml:"name"`
+	Input   Input   `yaml:"input"`
+	Action  Action  `yaml:"action"`
+	Success Success `yaml:"success"`
+	Error   Error   `yaml:"error"`
 }
 
 type Input struct {
-	UmbInput UmbInput `yaml:"umb"`
+	UmbInput UmbInput `yaml:"umb,omitempty"`
 }
 
 type UmbInput struct {
@@ -17,7 +18,7 @@ type UmbInput struct {
 }
 
 type Action struct {
-	TektonPipelineAction TektonPipelineAction `yaml:"tektonPipeline"`
+	TektonPipelineAction TektonPipelineAction `yaml:"tektonPipeline,omitempty"`
 }
 
 type TektonPipelineAction struct {
