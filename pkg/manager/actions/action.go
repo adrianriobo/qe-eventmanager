@@ -1,7 +1,7 @@
 package actions
 
 type Runnable interface {
-	Run(actionInformation interface{}) error
+	Run() error
 }
 
 type Action struct {

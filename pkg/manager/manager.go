@@ -8,8 +8,6 @@ import (
 
 	"encoding/base64"
 
-	buildComplete "github.com/adrianriobo/qe-eventmanager/pkg/event/build-complete"
-	interopOCP "github.com/adrianriobo/qe-eventmanager/pkg/event/build-complete/interop-ocp"
 	interopRHEL "github.com/adrianriobo/qe-eventmanager/pkg/event/build-complete/interop-rhel"
 	"github.com/adrianriobo/qe-eventmanager/pkg/manager/providers"
 	"github.com/adrianriobo/qe-eventmanager/pkg/manager/rules"
@@ -20,35 +18,23 @@ import (
 )
 
 func Initialize(providersFilePath string, rulesFilePath []string) {
-
 	providers, rules, err := loadFiles(providersFilePath, rulesFilePath)
 	if err != nil {
 		logging.Errorf("%v", err)
 		os.Exit(1)
 	}
-
-	// Create pipeline client
 	if err := createTektonClient(providers.Tekton); err != nil {
 		logging.Error(err)
 		os.Exit(1)
 	}
-
-	// Create umb client
 	if err := createUMBClient(providers.UMB); err != nil {
 		logging.Error(err)
 		os.Exit(1)
 	}
-
-	if len(*rules) > 0 {
-		logging.Debugf("Printing rules content: %v", rules)
-	}
-
-	// Handle events
-	if err := handleEvents(); err != nil {
+	if err := manageRules(rules); err != nil {
 		logging.Error(err)
 		os.Exit(1)
 	}
-
 	// Execute until stop signal
 	waitForStop()
 	stop()
@@ -139,17 +125,17 @@ func createUMBClient(info providers.UMB) (err error) {
 	return
 }
 
-// func addRules(rules []rules.Rule) error {
-// 	for _, rule := range rules {
-// 		rule.Input.
-// 	}
-
-func handleEvents() error {
-	if err := umb.Subscribe(buildComplete.Topic, []func(event interface{}) error{
-		func(event interface{}) error { return interopOCP.New().Handler(event) },
-		func(event interface{}) error { return interopRHEL.New().Handler(event) }}); err != nil {
-		umb.GracefullShutdown()
-		return err
+func manageRules(rules *[]rules.Rule) error {
+	if len(*rules) > 0 {
+		logging.Debugf("Printing rules content: %v", rules)
+		for _, rule := range *rules {
+			// Check if input is umb, for the moment the only accepted input
+			if err := umb.Subscribe(rule.Input.UmbInput.Topic, []func(event interface{}) error{
+				func(event interface{}) error { return interopRHEL.New().Handler(event) }}); err != nil {
+				umb.GracefullShutdown()
+				return err
+			}
+		}
 	}
 	return nil
 }
