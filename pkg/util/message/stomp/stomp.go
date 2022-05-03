@@ -27,7 +27,8 @@ const (
 	DefaultFailoverRetryDelay = 0.1
 )
 
-func NewConnection(sslCertPath, sslKeyPath, sslCaPath string, hosts []string, connOpts ...func(*stomp.Conn) error) (*Connection, error) {
+func NewConnection(sslCertPath, sslKeyPath, sslCaPath []byte,
+	hosts []string, connOpts ...func(*stomp.Conn) error) (*Connection, error) {
 	tlsConfig, err := utilTLS.CreateTLSConfig(sslCertPath, sslKeyPath, sslCaPath)
 	if err != nil {
 		return nil, err
@@ -44,7 +45,7 @@ func NewConnection(sslCertPath, sslKeyPath, sslCaPath string, hosts []string, co
 func (c *Connection) Connect() (err error) {
 	var conn *tls.Conn
 	for _, url := range c.hosts {
-		logging.Debugf("Connecting to broker")
+		logging.Infof("Connecting to broker")
 		conn, err = tls.Dial("tcp", url, c.tlsConfig)
 
 		if err == nil {

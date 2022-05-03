@@ -9,6 +9,7 @@ BUILD_DIR ?= out
 SOURCE_DIRS = cmd pkg test
 # https://golang.org/cmd/link/
 LDFLAGS := $(VERSION_VARIABLES) -extldflags='-static' ${GO_EXTRA_LDFLAGS}
+GCFLAGS := all=-N -l
 
 # Add default target
 .PHONY: default
@@ -30,8 +31,10 @@ install: $(SOURCES)
 	go install -ldflags="$(LDFLAGS)" $(GO_EXTRA_BUILDFLAGS) ./cmd
 
 $(BUILD_DIR)/qe-eventmanager: $(SOURCES)
-	GOOS=linux GOARCH=amd64 go build -ldflags="$(LDFLAGS)" -o $(BUILD_DIR)/qe-eventmanager $(GO_EXTRA_BUILDFLAGS) ./cmd
+	GOOS=linux GOARCH=amd64 go build -gcflags="$(GCFLAGS)" -ldflags="$(LDFLAGS)" -o $(BUILD_DIR)/qe-eventmanager $(GO_EXTRA_BUILDFLAGS) ./cmd
 
+
+ 
 .PHONY: build 
 build: $(BUILD_DIR)/qe-eventmanager
 

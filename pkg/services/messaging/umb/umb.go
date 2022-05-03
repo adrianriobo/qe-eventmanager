@@ -12,6 +12,11 @@ import (
 	"github.com/adrianriobo/qe-eventmanager/pkg/util/logging"
 )
 
+const (
+	Stomp string = "stomp"
+	Amqp  string = "amqp"
+)
+
 type umb struct {
 	consumerID    string
 	client        api.ClientInterface
@@ -30,13 +35,14 @@ type subscription struct {
 	active       bool
 }
 
-var _umb umb
+var _umb *umb
 
-func CreateClient(consumerID, protocol string, brokers []string, certificateFile, privateKeyFile, caCertsFile string) (err error) {
-	_umb.consumerID = consumerID
-	_umb.consumers = &sync.WaitGroup{}
-	_umb.handlers = &sync.WaitGroup{}
-	_umb.active = true
+func CreateClient(consumerID, protocol string, brokers []string, certificateFile, privateKeyFile, caCertsFile []byte) (err error) {
+	_umb = &umb{
+		consumerID: consumerID,
+		consumers:  &sync.WaitGroup{},
+		handlers:   &sync.WaitGroup{},
+		active:     true}
 	_umb.client, err = createClient(protocol, brokers, certificateFile, privateKeyFile, caCertsFile)
 	return
 }
@@ -80,7 +86,8 @@ func GracefullShutdown() {
 	logging.Infof("Client disconnected from UMB")
 }
 
-func createClient(protocol string, brokers []string, certificateFile, privateKeyFile, caCertsFile string) (api.ClientInterface, error) {
+func createClient(protocol string, brokers []string,
+	certificateFile, privateKeyFile, caCertsFile []byte) (api.ClientInterface, error) {
 	switch protocol {
 	case Stomp:
 		return stomp.Create(certificateFile, privateKeyFile, caCertsFile, brokers)

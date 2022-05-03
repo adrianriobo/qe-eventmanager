@@ -1,6 +1,9 @@
 package rules
 
 import (
+	"path/filepath"
+	"strings"
+
 	"github.com/spf13/viper"
 )
 
@@ -12,10 +15,13 @@ import (
 // })
 // viper.WatchConfig()
 // Extend to multiple files each one rule?
-func LoadRules(filename, path string) (*Rule, error) {
-	viper.SetConfigType("yaml")
-	viper.SetConfigName(filename)
-	viper.AddConfigPath(path)
+func LoadRules(configFilePath string) (*Rule, error) {
+	viper.SetConfigType(filepath.Ext(configFilePath))
+	viper.SetConfigName(
+		strings.TrimSuffix(
+			filepath.Base(configFilePath),
+			filepath.Ext(configFilePath)))
+	viper.AddConfigPath(filepath.Dir(configFilePath))
 	err := viper.ReadInConfig()
 	if err != nil {
 		return nil, err

@@ -23,7 +23,7 @@ type Subscription struct {
 	Receiver *amqp.Receiver
 }
 
-func Create(certificateFile, privateKeyFile, caCertsFile string,
+func Create(certificateFile, privateKeyFile, caCertsFile []byte,
 	brokers []string) (api.ClientInterface, error) {
 	tlsConfig, err :=
 		tls.CreateTLSConfig(certificateFile, privateKeyFile, caCertsFile)
@@ -33,7 +33,7 @@ func Create(certificateFile, privateKeyFile, caCertsFile string,
 	var client *amqp.Client
 	for _, broker := range brokers {
 		address := fmt.Sprintf("%s://%s", schema, broker)
-		logging.Debugf("Connecting to broker %s", address)
+		logging.Infof("Connecting to broker %s", address)
 		client, err = amqp.Dial(address, amqp.ConnTLSConfig(tlsConfig))
 		if err == nil {
 			logging.Debugf("Established TCP connection to broker %s", address)
