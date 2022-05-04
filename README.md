@@ -13,11 +13,9 @@ UMB integration with qe platform
 ## Configuration
 
 The eventmanager requires a set of information around the `providers` on which it can act upon  
-and a set or `rules` defining the integrations and the actions to be executed.  
+and a set or `flows` defining the integrations and the actions to be executed.  
 
 ### Providers
-
-Here is a sample for a providers configuration:  
 
 ```yaml
 umb:
@@ -34,51 +32,46 @@ tekton:
     pvc: pvc1
   - name: workspace2
     pvc: pvc2
-  kubeconfig: XXXXXX # This value is optional is used to connect to remote cluster, should be encoded as base64
-                          # Otherwise eventmanager can rely on RBAC when running inside the cluster
+  kubeconfig: XXXXXX # encoded as base64. This value is optional is used to connect to remote cluster
+                     # Otherwise eventmanager can rely on RBAC when running inside the cluster
 ```
 
-### Rules  
-
-Here is a sample for a rule defintion:  
+### Flows  
 
 ```yaml
-name:  sample-umb-rule
+name:  sample-flow
 input:
   umb:
     topic: topic-to-consume
     filters:
-      - $.estrcuture.list[?(@.field1=='value1')].field1
-      - $.estrcuture.list[?(@.field2=='value2')].field1
+      - jsonpath: $.estrcuture.list[?(@.field1=='value1')].field1
+      - jsonpath: $.estrcuture.list[?(@.field2=='value2')].field1
 action:
   tektonPipeline:
     name: XXX
     params:
     - name: foo
-      value: $.estrcuture.list[(@.field=='foo')].id # $. jsonpath expression function
+      jsonpath: $.estrcuture.list[(@.field=='foo')].id # $. jsonpath expression function
     - name: bar
-      value: constant #fixed value 
-    results:
-    - name: baz # accessible with actionResults function
-      pipelineResultName: baz 
-    - name: error # accessible with actionResults function
-      pipelineResultName: error 
-success:
-  umb:
-    topic: topic-to-produce
-    eventSchema: message-schema-to-send
-    eventFields:
-     - name: baz
-       value: actionResult[baz] #actionResults allow to access results 
-     - name: fixed
-       value: constant #fixed value
-error:
-  umb:
-    topic: topic-to-produce
-    eventSchema: message-schema-to-send
-    eventFields:
-    - name: error
-      value: actionResult[error] #actionResults allow to access results 
+      value: bar # constant string 
+  success:
+    umb:
+      topic: topic-to-produce
+      eventSchema: message-schema-to-send
+      eventFields:
+      - name: foo
+        pipelineResultName: foo # Pick value from pipeline results
+      - name: bar
+        pipelineParamaterName: bar # Pick value from pipeline parameters
+      - name: baz
+        value: baz # constant string
+  error:
+    umb:
+      topic: topic-to-produce
+      eventSchema: message-schema-to-send
+      eventFields:
+      - name: error
+        pipelineResultName: error
 ```
 
 ## Build
