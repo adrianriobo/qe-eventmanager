@@ -12,7 +12,10 @@ import (
 	"github.com/adrianriobo/qe-eventmanager/pkg/util/tls"
 )
 
-const schema = "amqp+ssl"
+const (
+	schema                 = "amqp+ssl"
+	defaultConnIdleTimeout = 60 * time.Minute
+)
 
 type Client struct {
 	Client  *amqp.Client
@@ -35,6 +38,7 @@ func Create(certificateFile, privateKeyFile, caCertsFile []byte,
 		address := fmt.Sprintf("%s://%s", schema, broker)
 		logging.Infof("Connecting to broker %s", address)
 		client, err = amqp.Dial(address, amqp.ConnTLSConfig(tlsConfig))
+		amqp.ConnIdleTimeout(defaultConnIdleTimeout)
 		if err == nil {
 			logging.Debugf("Established TCP connection to broker %s", address)
 			break
@@ -73,7 +77,7 @@ func (s Subscription) Unsubscribe() (err error) {
 }
 
 func (c *Client) Subscribe(destination string,
-	handlers []func(event interface{}) error) (api.SubscriptionInterface, error) {
+	handlers []api.MessageHandler) (api.SubscriptionInterface, error) {
 	receiver, err := c.Session.NewReceiver(
 		amqp.LinkSourceAddress(destination),
 		amqp.LinkCredit(10),
@@ -85,9 +89,9 @@ func (c *Client) Subscribe(destination string,
 }
 
 func (c *Client) Send(destination string, message interface{}) error {
-	umbTopic := fmt.Sprintf("/topic/%s", destination)
+	topic := fmt.Sprintf("/topic/%s", destination)
 	sender, err := c.Session.NewSender(
-		amqp.LinkTargetAddress(umbTopic),
+		amqp.LinkTargetAddress(topic),
 	)
 	if err != nil {
 		return err

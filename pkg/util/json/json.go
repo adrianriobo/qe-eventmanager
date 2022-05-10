@@ -1,22 +1,25 @@
 package json
 
 import (
+	"fmt"
+
 	"github.com/adrianriobo/qe-eventmanager/pkg/util/logging"
 	"github.com/spyzhov/ajson"
 )
 
-func matchFilters(event string, filters []string) (bool, error) {
-	json := []byte(event)
-	root, _ := ajson.Unmarshal(json)
+func MatchFiltersAsString(event string, filters []string) (bool, error) {
+	return MatchFilters([]byte(event), filters)
+}
+
+func MatchFilters(event []byte, filters []string) (bool, error) {
+	root, _ := ajson.Unmarshal(event)
 	for _, filter := range filters {
 		node, err := root.JSONPath(filter)
 		if err != nil {
-			logging.Error("Error with %v", err)
-			return false, err
+			return false, fmt.Errorf("error with %v", err)
 		}
 		if len(node) == 0 {
-			logging.Error("Error event does not match the filters")
-			return false, nil
+			return false, fmt.Errorf("error event does not match the filters")
 		}
 		logging.Debug("Found event marching the filters")
 	}

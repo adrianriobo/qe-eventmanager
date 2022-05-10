@@ -59,7 +59,8 @@ func (c *Client) Disconnect() {
 	logging.Infof("Client disconnected from UMB")
 }
 
-func (c *Client) Subscribe(destination string, handlers []func(event interface{}) error) (api.SubscriptionInterface, error) {
+func (c *Client) Subscribe(destination string,
+	handlers []api.MessageHandler) (api.SubscriptionInterface, error) {
 	subscription, err := c.Connection.FailoverSubscribe(destination, defaultACKMode)
 	if err != nil {
 		return nil, err

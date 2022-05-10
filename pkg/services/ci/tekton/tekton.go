@@ -50,25 +50,24 @@ func GetDefaultNamespace() string {
 	return _client.namespace
 }
 
-func CreatePipelinerun(namespace string, spec *v1beta1.PipelineRun) (*v1beta1.PipelineRun, error) {
+func ApplyPipelinerun(spec *v1beta1.PipelineRun) (*v1beta1.PipelineRun, error) {
 	if err := checkInitialization(); err != nil {
 		return nil, err
 	}
-	// Add namespace
-	// Add workspaces
 	spec.ObjectMeta.Namespace = _client.namespace
-
-	return _client.clientset.TektonV1beta1().PipelineRuns(namespace).Create(context.Background(), spec, v1.CreateOptions{})
+	return _client.clientset.TektonV1beta1().
+		PipelineRuns(_client.namespace).
+		Create(context.Background(), spec, v1.CreateOptions{})
 }
 
 // DESIGN best approach one informer per run or one informer and some async mechanism from there
 // when we get the status result on the generated pipelinerun we can close the informer
-func AddInformer(namespace, pipelinerunName string, status chan *v1beta1.PipelineRunStatus, informerStopper chan struct{}) {
+func AddInformer(pipelinerunName string, status chan *v1beta1.PipelineRunStatus, informerStopper chan struct{}) {
 	if err := checkInitialization(); err != nil {
 		logging.Error(err)
 	}
 	// https://github.com/kubernetes-client/java/issues/725
-	informer := informers.NewPipelineRunInformer(_client.clientset, namespace, 2*time.Minute, nil)
+	informer := informers.NewPipelineRunInformer(_client.clientset, _client.namespace, 2*time.Minute, nil)
 	informer.AddEventHandler(cache.ResourceEventHandlerFuncs{UpdateFunc: func(oldObj, newObj interface{}) {
 		pipelineRun, ok := newObj.(*v1beta1.PipelineRun)
 		if !ok {

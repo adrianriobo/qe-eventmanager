@@ -24,14 +24,14 @@ const event = `
 }`
 
 func TestMatching(t *testing.T) {
-	match, err := matchFilters(event, []string{"$.artifact.products[?(@.nvr=='found')].nvr"})
+	match, err := MatchFiltersAsString(event, []string{"$.artifact.products[?(@.nvr=='found')].nvr"})
 	if !match || err != nil {
 		t.Fatal("Expression should match")
 	}
 }
 
 func TestNotMatching(t *testing.T) {
-	match, err := matchFilters(event, []string{"$.artifact.products[?(@.nvr=='not-found')].nvr"})
+	match, err := MatchFiltersAsString(event, []string{"$.artifact.products[?(@.nvr=='not-found')].nvr"})
 	if match || err != nil {
 		t.Fatal("Expression should not match")
 	}

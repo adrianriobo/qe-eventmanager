@@ -25,6 +25,7 @@ type Connection struct {
 const (
 	DefaultFailoverRetryCount = 1
 	DefaultFailoverRetryDelay = 0.1
+	defaultConnIdleTimeout    = 60 * time.Minute
 )
 
 func NewConnection(sslCertPath, sslKeyPath, sslCaPath []byte,
@@ -61,7 +62,7 @@ func (c *Connection) Connect() (err error) {
 	// disable heartbeat since it actually just makes us disconnect
 	// see: https://github.com/go-stomp/stomp/issues/32
 	// remove or set to short time to test failover :-)
-	opts := append(c.connOpts, stomp.ConnOpt.HeartBeat(0, 0))
+	opts := append(c.connOpts, stomp.ConnOpt.HeartBeat(0, 0), stomp.ConnOpt.RcvReceiptTimeout(defaultConnIdleTimeout))
 	stompConn, err := stomp.Connect(conn, opts...)
 	if err != nil {
 		return errors.New("Failed stomp connection: " + err.Error())

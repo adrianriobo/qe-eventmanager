@@ -1,6 +1,7 @@
 package manager
 
 import (
+	"fmt"
 	"os"
 	"os/signal"
 	"strings"
@@ -8,17 +9,19 @@ import (
 
 	"encoding/base64"
 
-	interopRHEL "github.com/adrianriobo/qe-eventmanager/pkg/event/build-complete/interop-rhel"
+	"github.com/adrianriobo/qe-eventmanager/pkg/manager/actions"
+	actionTekton "github.com/adrianriobo/qe-eventmanager/pkg/manager/actions/tekton"
+	"github.com/adrianriobo/qe-eventmanager/pkg/manager/flows"
+	inputsUMB "github.com/adrianriobo/qe-eventmanager/pkg/manager/inputs/umb"
 	"github.com/adrianriobo/qe-eventmanager/pkg/manager/providers"
-	"github.com/adrianriobo/qe-eventmanager/pkg/manager/rules"
 	"github.com/adrianriobo/qe-eventmanager/pkg/services/ci/tekton"
 	"github.com/adrianriobo/qe-eventmanager/pkg/services/messaging/umb"
 	"github.com/adrianriobo/qe-eventmanager/pkg/util/file"
 	"github.com/adrianriobo/qe-eventmanager/pkg/util/logging"
 )
 
-func Initialize(providersFilePath string, rulesFilePath []string) {
-	providers, rules, err := loadFiles(providersFilePath, rulesFilePath)
+func Initialize(providersFilePath string, flowsFilePath []string) {
+	providers, flows, err := loadFiles(providersFilePath, flowsFilePath)
 	if err != nil {
 		logging.Errorf("%v", err)
 		os.Exit(1)
@@ -31,7 +34,7 @@ func Initialize(providersFilePath string, rulesFilePath []string) {
 		logging.Error(err)
 		os.Exit(1)
 	}
-	if err := manageRules(rules); err != nil {
+	if err := manageFlows(flows); err != nil {
 		logging.Error(err)
 		os.Exit(1)
 	}
@@ -55,29 +58,29 @@ func stop() {
 	logging.Info("Event manager was gracefully stopped. Enjoy your day!")
 }
 
-func loadFiles(providersFilePath string, rulesFilePath []string) (*providers.Providers, *[]rules.Rule, error) {
+func loadFiles(providersFilePath string, flowsFilePath []string) (*providers.Providers, *[]flows.Flow, error) {
 	var structuredProviders providers.Providers
-	var structuredRules []rules.Rule
+	var structuredFlows []flows.Flow
 	if len(providersFilePath) > 0 {
 		if err := file.LoadFileAsStruct(providersFilePath, &structuredProviders); err != nil {
 			logging.Errorf("Can not load providers file: %v", err)
 			return nil, nil, err
 		}
 	}
-	if len(rulesFilePath) > 0 {
-		for _, ruleFilePath := range rulesFilePath {
-			if len(ruleFilePath) > 0 {
-				var rule rules.Rule
-				if err := file.LoadFileAsStruct(ruleFilePath, &rule); err != nil {
+	if len(flowsFilePath) > 0 {
+		for _, flowFilePath := range flowsFilePath {
+			if len(flowFilePath) > 0 {
+				var flow flows.Flow
+				if err := file.LoadFileAsStruct(flowFilePath, &flow); err != nil {
 					// Should try to keep loading remaining rules if exist
-					logging.Errorf("Can not load rules file: %v", err)
+					logging.Errorf("Can not load flows file: %v", err)
 					return nil, nil, err
 				}
-				structuredRules = append(structuredRules, rule)
+				structuredFlows = append(structuredFlows, flow)
 			}
 		}
 	}
-	return &structuredProviders, &structuredRules, nil
+	return &structuredProviders, &structuredFlows, nil
 }
 
 func createTektonClient(info providers.Tekton) (err error) {
@@ -125,17 +128,43 @@ func createUMBClient(info providers.UMB) (err error) {
 	return
 }
 
-func manageRules(rules *[]rules.Rule) error {
-	if len(*rules) > 0 {
-		logging.Debugf("Printing rules content: %v", rules)
-		for _, rule := range *rules {
-			// Check if input is umb, for the moment the only accepted input
-			if err := umb.Subscribe(rule.Input.UmbInput.Topic, []func(event interface{}) error{
-				func(event interface{}) error { return interopRHEL.New().Handler(event) }}); err != nil {
-				umb.GracefullShutdown()
-				return err
+// For each flow defined:
+// Create action that action
+func manageFlows(flows *[]flows.Flow) error {
+	if len(*flows) > 0 {
+		logging.Debugf("Setting up flow: %v", flows)
+		for _, flow := range *flows {
+			logging.Debugf("Setting up flow: %v", flow)
+			action, err := getAction(flow)
+			if err != nil {
+				logging.Errorf("Find error with flow %s:%v", flow.Name, err)
+				break
+			}
+			err = addActionToInput(flow, action)
+			if err != nil {
+				logging.Errorf("Find error with flow %s:%v", flow.Name, err)
+				break
 			}
 		}
+	}
+	return nil
+}
+
+func getAction(flow flows.Flow) (actions.Runnable, error) {
+	if flow.Action.TektonPipelineAction != nil {
+		//Create the action
+		action, err := actionTekton.Create("fromConfig", *flow.Action.TektonPipelineAction)
+		if err != nil {
+			return nil, err
+		}
+		return action, nil
+	}
+	return nil, fmt.Errorf("action is invalid")
+}
+
+func addActionToInput(flow flows.Flow, action actions.Runnable) error {
+	if flow.Input.UmbInput != nil {
+		inputsUMB.Add(*flow.Input.UmbInput, action)
 	}
 	return nil
 }

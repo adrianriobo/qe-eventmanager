@@ -1,4 +1,4 @@
-package buildComplete
+package interop
 
 type Contact struct {
 	Name  string `json:"name"`
