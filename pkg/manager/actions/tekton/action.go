@@ -1,9 +1,10 @@
-package actions
+package tekton
 
 import (
 	"fmt"
 
-	"github.com/adrianriobo/qe-eventmanager/pkg/manager/rules"
+	"github.com/adrianriobo/qe-eventmanager/pkg/manager/flows"
+	tektonClient "github.com/adrianriobo/qe-eventmanager/pkg/services/ci/tekton"
 	"github.com/adrianriobo/qe-eventmanager/pkg/util/logging"
 	"github.com/tektoncd/pipeline/pkg/apis/pipeline/v1beta1"
 	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -11,10 +12,10 @@ import (
 
 type TektonAction struct {
 	actionManagerID string
-	actionInfo      rules.TektonPipelineAction
+	actionInfo      flows.TektonPipelineAction
 }
 
-func Create(actionManagerID string, actionInfo rules.TektonPipelineAction) (*TektonAction, error) {
+func Create(actionManagerID string, actionInfo flows.TektonPipelineAction) (*TektonAction, error) {
 	var action TektonAction
 	action.actionManagerID = actionManagerID
 	action.actionInfo = actionInfo
@@ -24,6 +25,24 @@ func Create(actionManagerID string, actionInfo rules.TektonPipelineAction) (*Tek
 func (a TektonAction) Run() error {
 	pipelineRunSpec := a.createPipelineRun()
 	logging.Debugf("Creating pipelinerun spec: %v", pipelineRunSpec)
+	pipelineRun, err := tektonClient.ApplyPipelinerun(pipelineRunSpec)
+	if err != nil {
+		return err
+	}
+	status := make(chan *v1beta1.PipelineRunStatus)
+	informerStopper := make(chan struct{})
+	defer close(status)
+	defer close(informerStopper)
+	go tektonClient.AddInformer(pipelineRun.GetName(), status, informerStopper)
+	runStatus := <-status
+	logging.Debugf("Got the pipelinestatus %v", runStatus)
+
+	// xunitURL := tektonUtil.GetResultValue(runStatus.PipelineResults, xunitURLResultName)
+	// return pipelinerun.GetName(),
+	// 	xunitURL,
+	// 	tektonUtil.GetResultValue(runStatus.PipelineResults, qeDurationResultName),
+	// 	tektonUtil.GetResultState(xunitURL),
+	// 	nil
 	return nil
 }
 

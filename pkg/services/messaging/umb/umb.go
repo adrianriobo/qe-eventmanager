@@ -1,7 +1,6 @@
 package umb
 
 import (
-	"encoding/json"
 	"fmt"
 	"strings"
 	"sync"
@@ -31,7 +30,7 @@ type umb struct {
 type subscription struct {
 	topic        string
 	subscription api.SubscriptionInterface
-	handlers     []func(event interface{}) error
+	handlers     []api.MessageHandler
 	active       bool
 }
 
@@ -53,7 +52,7 @@ func Send(destination string, message interface{}) error {
 	return _umb.client.Send(destination, message)
 }
 
-func Subscribe(topic string, handlers []func(event interface{}) error) error {
+func Subscribe(topic string, handlers []api.MessageHandler) error {
 	_umb.subscribe.Lock()
 	defer _umb.subscribe.Unlock()
 	logging.Infof("Adding a subscription to %s", topic)
@@ -115,15 +114,18 @@ func consume(subscription *subscription) {
 	logging.Debugf("Finalize consumer for subscription %s", subscription.topic)
 }
 
-func handle(msg []byte, handler func(event interface{}) error) {
+func handle(msg []byte, handler api.MessageHandler) {
 	defer _umb.handlers.Done()
-	var event map[string]interface{}
+	// var event map[string]interface{}
 	logging.Debugf("Print message %+v", string(msg[:]))
-	if err := json.Unmarshal(msg, &event); err != nil {
-		logging.Error(err)
-	}
-	if err := handler(event); err != nil {
-		logging.Error(err)
+	// if err := json.Unmarshal(msg, &event); err != nil {
+	// 	logging.Error(err)
+	// }
+	// if err := handler(event); err != nil {
+	// 	logging.Error(err)
+	// }
+	if err := handler.Match(msg); err != nil {
+		handler.Handle(msg)
 	}
 }
 
