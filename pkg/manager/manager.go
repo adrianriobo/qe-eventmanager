@@ -1,21 +1,22 @@
 package manager
 
 import (
+	"encoding/base64"
 	"fmt"
 	"os"
 	"os/signal"
 	"strings"
 	"syscall"
 
-	"encoding/base64"
-
 	"github.com/adrianriobo/qe-eventmanager/pkg/manager/actions"
+	actionForward "github.com/adrianriobo/qe-eventmanager/pkg/manager/actions/forward"
 	actionTekton "github.com/adrianriobo/qe-eventmanager/pkg/manager/actions/tekton"
 	"github.com/adrianriobo/qe-eventmanager/pkg/manager/flows"
 	inputsUMB "github.com/adrianriobo/qe-eventmanager/pkg/manager/inputs/umb"
 	"github.com/adrianriobo/qe-eventmanager/pkg/manager/providers"
 	"github.com/adrianriobo/qe-eventmanager/pkg/services/ci/tekton"
 	"github.com/adrianriobo/qe-eventmanager/pkg/services/messaging/umb"
+	"github.com/adrianriobo/qe-eventmanager/pkg/util"
 	"github.com/adrianriobo/qe-eventmanager/pkg/util/file"
 	"github.com/adrianriobo/qe-eventmanager/pkg/util/logging"
 )
@@ -151,9 +152,18 @@ func manageFlows(flows *[]flows.Flow) error {
 }
 
 func getAction(flow flows.Flow) (actions.Runnable, error) {
-	if flow.Action.TektonPipelineAction != nil {
+	// if flow.Action.TektonPipelineAction != nil {
+	if !util.IsEmpty(flow.Action.TektonPipeline) {
 		//Create the action
-		action, err := actionTekton.Create("fromConfig", *flow.Action.TektonPipelineAction)
+		action, err := actionTekton.Create(flow.Action.TektonPipeline)
+		if err != nil {
+			return nil, err
+		}
+		return action, nil
+	}
+	if !util.IsEmpty(flow.Action.Forward) {
+		//Create the action
+		action, err := actionForward.Create(flow.Action.Forward)
 		if err != nil {
 			return nil, err
 		}
@@ -163,8 +173,9 @@ func getAction(flow flows.Flow) (actions.Runnable, error) {
 }
 
 func addActionToInput(flow flows.Flow, action actions.Runnable) error {
-	if flow.Input.UmbInput != nil {
-		inputsUMB.Add(*flow.Input.UmbInput, action)
+	// if flow.Input.UmbInput != nil {
+	if !util.IsEmpty(flow.Input.UMB) {
+		inputsUMB.Add(flow.Input.UMB, action)
 	}
 	return nil
 }
