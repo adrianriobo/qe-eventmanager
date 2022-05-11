@@ -13,7 +13,7 @@ import (
 
 // An umb flow will start with a message from umb
 // it will create a subscription and a handler
-func Add(input flows.UmbInput, action actions.Runnable) error {
+func Add(input flows.UMBInput, action actions.Runnable) error {
 	if err := umb.Subscribe(
 		input.Topic,
 		[]api.MessageHandler{new(input.Filters, action)}); err != nil {
@@ -24,23 +24,23 @@ func Add(input flows.UmbInput, action actions.Runnable) error {
 
 type umbFlow struct {
 	action  actions.Runnable
-	filters []flows.UmbInputFilter
+	filters []flows.UMBInputFilter
 }
 
-func new(filters []flows.UmbInputFilter, action actions.Runnable) umbFlow {
+func new(filters []flows.UMBInputFilter, action actions.Runnable) umbFlow {
 	return umbFlow{
 		action:  action,
 		filters: filters}
 }
 
 func (u umbFlow) Handle(event []byte) error {
-	return u.action.Run()
+	return u.action.Run(event)
 }
 
 func (u umbFlow) Match(event []byte) error {
 	var filters []string
 	for _, filter := range u.filters {
-		filters = append(filters, filter.JsonPath)
+		filters = append(filters, filter.JSONPath)
 	}
 	match, err := json.MatchFilters(event, filters)
 	if err != nil {

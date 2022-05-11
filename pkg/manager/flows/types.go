@@ -7,27 +7,32 @@ type Flow struct {
 }
 
 type Input struct {
-	UmbInput *UmbInput `yaml:"umb,omitempty"`
+	UMB UMBInput `yaml:"umb,omitempty"`
 }
 
-type UmbInput struct {
+type UMBInput struct {
 	Topic   string           `yaml:"topic"`
-	Filters []UmbInputFilter `yaml:"filters"`
+	Filters []UMBInputFilter `yaml:"filters"`
 }
 
-type UmbInputFilter struct {
-	JsonPath string `yaml:"jsonpath"`
+type UMBInputFilter struct {
+	JSONPath string `yaml:"jsonpath"`
 }
 
 type Action struct {
-	TektonPipelineAction *TektonPipelineAction `yaml:"tektonPipeline,omitempty"`
-	Success              Success               `yaml:"success"`
-	Error                Error                 `yaml:"error"`
+	TektonPipeline TektonPipelineAction `yaml:"tektonPipeline,omitempty"`
+	Forward        ForwardAction        `yaml:"forward,omitempty"`
+	Success        Success              `yaml:"success,omitempty"`
+	Error          Error                `yaml:"error,omitempty"`
 }
 
 type TektonPipelineAction struct {
 	PipelineName   string                `yaml:"name"`
 	PipelineParams []TektonPipelineParam `yaml:"params"`
+}
+
+type ForwardAction struct {
+	Type string `yaml:"type"`
 }
 
 type TektonPipelineParam struct {
@@ -37,11 +42,11 @@ type TektonPipelineParam struct {
 }
 
 type Success struct {
-	UMBEvent UMBEvent `yaml:"umb"`
+	UMB UMBEvent `yaml:"umb"`
 }
 
 type Error struct {
-	UMBEvent UMBEvent `yaml:"umb"`
+	UMB UMBEvent `yaml:"umb"`
 }
 
 type UMBEvent struct {

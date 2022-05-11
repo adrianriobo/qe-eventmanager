@@ -1,5 +1,5 @@
 package actions
 
 type Runnable interface {
-	Run() error
+	Run(event []byte) error
 }

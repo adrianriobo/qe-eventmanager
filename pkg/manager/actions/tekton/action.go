@@ -11,18 +11,15 @@ import (
 )
 
 type TektonAction struct {
-	actionManagerID string
-	actionInfo      flows.TektonPipelineAction
+	actionInfo flows.TektonPipelineAction
 }
 
-func Create(actionManagerID string, actionInfo flows.TektonPipelineAction) (*TektonAction, error) {
-	var action TektonAction
-	action.actionManagerID = actionManagerID
-	action.actionInfo = actionInfo
-	return &action, nil
+func Create(actionInfo flows.TektonPipelineAction) (*TektonAction, error) {
+	action := &TektonAction{actionInfo: actionInfo}
+	return action, nil
 }
 
-func (a TektonAction) Run() error {
+func (a TektonAction) Run(event []byte) error {
 	pipelineRunSpec := a.createPipelineRun()
 	logging.Debugf("Creating pipelinerun spec: %v", pipelineRunSpec)
 	pipelineRun, err := tektonClient.ApplyPipelinerun(pipelineRunSpec)
@@ -52,7 +49,7 @@ func (a TektonAction) createPipelineRun() *v1beta1.PipelineRun {
 		param := v1beta1.Param{Name: tuple.Name, Value: *v1beta1.NewArrayOrString(tuple.Value)}
 		params = append(params, param)
 	}
-	pipelineRunName := fmt.Sprintf("%s-%s-", a.actionManagerID, a.actionInfo.PipelineName)
+	pipelineRunName := fmt.Sprintf("%s-", a.actionInfo.PipelineName)
 	return &v1beta1.PipelineRun{
 		TypeMeta:   v1.TypeMeta{},
 		ObjectMeta: v1.ObjectMeta{GenerateName: pipelineRunName},
