@@ -11,8 +11,6 @@ import (
 	"github.com/adrianriobo/qe-eventmanager/pkg/util/logging"
 )
 
-// An umb flow will start with a message from umb
-// it will create a subscription and a handler
 func Add(input flows.UMBInput, action actions.Runnable) error {
 	if err := umb.Subscribe(
 		input.Topic,

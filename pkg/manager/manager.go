@@ -133,7 +133,6 @@ func createUMBClient(info providers.UMB) (err error) {
 // Create action that action
 func manageFlows(flows *[]flows.Flow) error {
 	if len(*flows) > 0 {
-		logging.Debugf("Setting up flow: %v", flows)
 		for _, flow := range *flows {
 			logging.Debugf("Setting up flow: %v", flow)
 			action, err := getAction(flow)
