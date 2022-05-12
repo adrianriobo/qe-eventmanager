@@ -18,16 +18,12 @@ import (
 // Extend to multiple files each one rule?
 func LoadFileAsStruct(filePath string, structured interface{}) error {
 	viper.SetConfigType(strings.ReplaceAll(filepath.Ext(filePath), ".", ""))
-	logging.Debugf("%v", strings.ReplaceAll(filepath.Ext(filePath), ".", ""))
+	logging.Debugf("Loading file %s", filePath)
 	viper.SetConfigName(
 		strings.TrimSuffix(
 			filepath.Base(filePath),
 			filepath.Ext(filePath)))
-	logging.Debugf("%v", strings.TrimSuffix(
-		filepath.Base(filePath),
-		filepath.Ext(filePath)))
 	viper.AddConfigPath(filepath.Dir(filePath))
-	logging.Debugf("%v", filepath.Dir(filePath))
 	err := viper.ReadInConfig()
 	if err != nil {
 		return err
