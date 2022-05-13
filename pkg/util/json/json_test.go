@@ -14,7 +14,7 @@ const event = `
 			"id": "",
 			"nvr": "found"
 		}, {
-			"id": "bar",
+			"id": "foo",
 			"nvr": "bar"
 		}]
 	},
@@ -24,15 +24,33 @@ const event = `
 }`
 
 func TestMatching(t *testing.T) {
-	match, err := MatchFiltersAsString(event, []string{"$.artifact.products[?(@.nvr=='found')].nvr"})
+	match, err := MatchFilters([]byte(event), []string{"$.artifact.products[?(@.nvr=='found')].nvr"})
 	if !match || err != nil {
 		t.Fatal("Expression should match")
 	}
 }
 
 func TestNotMatching(t *testing.T) {
-	match, err := MatchFiltersAsString(event, []string{"$.artifact.products[?(@.nvr=='not-found')].nvr"})
-	if match || err != nil {
+
+	match, err := MatchFilters([]byte(event), []string{"$.artifact.products[?(@.nvr=='not-found')].nvr"})
+	if match || err == nil {
+		t.Fatal("Expression should not match")
+	}
+
+}
+
+func TestGetStringValueFound(t *testing.T) {
+	value, err := GetStringValue([]byte(event), "$.artifact.products[?(@.nvr=='bar')].id")
+	expectedValue := "foo"
+	if value != expectedValue || err != nil {
+		t.Fatal("Expression should match")
+	}
+}
+
+func TestGetStringValueNotFound(t *testing.T) {
+	value, err := GetStringValue([]byte(event), "$.artifact.products[?(@.nvr=='not-found')].id")
+	expectedValue := ""
+	if value != expectedValue || err == nil {
 		t.Fatal("Expression should not match")
 	}
 }
