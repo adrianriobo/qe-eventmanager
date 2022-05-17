@@ -22,13 +22,13 @@ type UMBInputFilter struct {
 type Action struct {
 	TektonPipeline TektonPipelineAction `yaml:"tektonPipeline,omitempty"`
 	Forward        ForwardAction        `yaml:"forward,omitempty"`
-	Success        Success              `yaml:"success,omitempty"`
-	Error          Error                `yaml:"error,omitempty"`
 }
 
 type TektonPipelineAction struct {
-	PipelineName   string                `yaml:"name"`
-	PipelineParams []TektonPipelineParam `yaml:"params"`
+	Name    string                `yaml:"name"`
+	Params  []TektonPipelineParam `yaml:"params"`
+	Success Success               `yaml:"success,omitempty"`
+	Error   Error                 `yaml:"error,omitempty"`
 }
 
 type ForwardAction struct {
@@ -50,9 +50,9 @@ type Error struct {
 }
 
 type UMBEvent struct {
-	Topic  string          `yaml:"topic"`
-	Schema string          `yaml:"eventSchema"`
-	Fields []UMBEventField `yaml:"eventFields"`
+	Topic       string          `yaml:"topic"`
+	EventSchema string          `yaml:"eventSchema"`
+	EventFields []UMBEventField `yaml:"eventFields"`
 }
 
 type UMBEventField struct {

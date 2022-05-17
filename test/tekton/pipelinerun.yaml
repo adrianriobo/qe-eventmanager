@@ -1,0 +1,15 @@
+---
+apiVersion: tekton.dev/v1beta1
+kind: PipelineRun
+metadata:
+  generateName: sample-pipeline-
+spec:
+  pipelineRef:
+    name: sample-pipeline
+  params:
+  - name: param1
+    value: openshift
+  - name: param2
+    value: '4.11.0-0.nightly-2022-05-11-054135'
+  - name: desired-result-state
+    value: error

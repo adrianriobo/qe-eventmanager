@@ -94,13 +94,14 @@ func createTektonClient(info providers.Tekton) (err error) {
 			workspaces = append(workspaces, adaptedItem)
 		}
 	}
-
-	kubeconfig, err := base64.StdEncoding.DecodeString(info.Kubeconfig)
-	if err != nil {
-		logging.Debugf("%s", string(kubeconfig))
-		err = tekton.CreateClient(kubeconfig, info.Namespace, workspaces)
+	kubeconfig := []byte("")
+	if len(info.Kubeconfig) > 0 {
+		kubeconfig, err = base64.StdEncoding.DecodeString(info.Kubeconfig)
+		if err != nil {
+			return
+		}
 	}
-	return
+	return tekton.CreateClient(kubeconfig, info.Namespace, workspaces)
 }
 
 func createUMBClient(info providers.UMB) (err error) {
