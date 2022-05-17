@@ -23,14 +23,14 @@ func Create(actionInfo flows.TektonPipelineAction) (*TektonAction, error) {
 func (a TektonAction) Run(event []byte) error {
 	// Check if pipelinerun require some parameter from event
 	pipelineRunParameters, err := parsePipelineParameters(
-		a.actionInfo.PipelineParams, event)
+		a.actionInfo.Params, event)
 	if err != nil {
 		return err
 	}
 	// Create the pipelinerun spec with params from event
 	pipelineRunSpec := createPipelineRun(
-		a.actionInfo.PipelineName, pipelineRunParameters)
-	logging.Debugf("Creating pipelinerun spec: %v", pipelineRunSpec)
+		a.actionInfo.Name, pipelineRunParameters)
+	logging.Debugf("Creating pipelinerun spec: %v", *pipelineRunSpec)
 	// Use tekton client to create the run
 	pipelineRun, err := tektonClient.ApplyPipelinerun(pipelineRunSpec)
 	if err != nil {
@@ -41,8 +41,7 @@ func (a TektonAction) Run(event []byte) error {
 	defer close(status)
 	defer close(informerStopper)
 	go tektonClient.AddInformer(pipelineRun.GetName(), status, informerStopper)
-	runStatus := <-status
-	logging.Debugf("Got the pipelinestatus %v", runStatus)
+	return manageResults(<-status, a.actionInfo.Success, a.actionInfo.Error)
 
 	// xunitURL := tektonUtil.GetResultValue(runStatus.PipelineResults, xunitURLResultName)
 	// return pipelinerun.GetName(),
@@ -50,7 +49,6 @@ func (a TektonAction) Run(event []byte) error {
 	// 	tektonUtil.GetResultValue(runStatus.PipelineResults, qeDurationResultName),
 	// 	tektonUtil.GetResultState(xunitURL),
 	// 	nil
-	return nil
 }
 
 func createPipelineRun(pipelineName string, params []v1beta1.Param) *v1beta1.PipelineRun {
@@ -77,7 +75,7 @@ func parsePipelineParameters(pipelineFlowParams []flows.TektonPipelineParam,
 		} else if len(flowParam.Value) > 0 {
 			value = flowParam.Value
 		} else {
-			return nil, fmt.Errorf("Parameter %s require a value, review flow definition", flowParam.Name)
+			return nil, fmt.Errorf("parameter %s require a value, review flow definition", flowParam.Name)
 		}
 		param := v1beta1.Param{
 			Name:  flowParam.Name,
@@ -85,4 +83,10 @@ func parsePipelineParameters(pipelineFlowParams []flows.TektonPipelineParam,
 		parameters = append(parameters, param)
 	}
 	return
+}
+
+func manageResults(status *v1beta1.PipelineRunStatus,
+	success flows.Success, error flows.Error) error {
+	logging.Debugf("Got the pipelinestatus %v", *status)
+	return nil
 }

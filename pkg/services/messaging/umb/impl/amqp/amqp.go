@@ -63,7 +63,6 @@ func (s Subscription) Read() ([]byte, error) {
 	if err != nil {
 		return nil, err
 	}
-	// msg.GetData() is nil
 	if msg.GetData() == nil {
 		return []byte(fmt.Sprintf("%v", msg.Value)), nil
 	}

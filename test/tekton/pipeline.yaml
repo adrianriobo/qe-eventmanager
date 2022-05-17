@@ -1,0 +1,67 @@
+---
+apiVersion: tekton.dev/v1beta1
+kind: Pipeline
+metadata:
+  name: sample-pipeline
+  labels:
+    app.kubernetes.io/version: "0.1"
+    redhat.com/product: eventmanager
+    dev.lifecycle.io/phase: testing
+  annotations:
+    tekton.dev/pipelines.minVersion: "0.24.x"
+    tekton.dev/categories: testing
+    tekton.dev/tags: eventmanager, ephimeral, integration
+    tekton.dev/displayName: "pipeline to run integration tests within eventmanager"
+    tekton.dev/platforms: "linux/amd64"
+spec:
+  description: >-
+    This pipeline can be used for integration tests within eventmanager
+  
+  params:
+  - name: param1
+    description: aditional parameter to pass to the pipeline
+    default: ''
+  - name: param2
+    description: aditional parameter to pass to the pipeline
+    default: ''
+  - name: desired-result-state
+    description: on invocation we can dedice if the pipeline will finalize with success or error
+
+  results:
+  - name: result1
+    description: some result to try parsing from eventmanager
+    value: $(tasks.main.results.result1)
+  - name: result2
+    description: another result to try parsing from eventmanager
+    value: $(tasks.main.results.result2)
+
+  tasks:
+  - name: main
+    taskSpec:
+      params:
+      - name: param1
+      - name: param2
+      - name: desired-result-state
+      results:
+      - name: result1
+      - name: result2
+      steps:
+      - name: main
+        image: registry.access.redhat.com/ubi8/ubi-minimal
+        script: |
+          #!/bin/sh
+          echo -n "$(params.param1)" | tee $(results.result1.path)
+          echo -n "$(params.param2)" | tee $(results.result2.path)    
+          if [[ $(params.desired-result-state) == "success" ]]; then
+            exit 0
+          else
+            exit 1
+          fi
+    params:
+    - name: param1
+      value: $(params.param1)
+    - name: param2
+      value: $(params.param2)
+    - name: desired-result-state
+      value: $(params.desired-result-state)
+  

@@ -116,15 +116,7 @@ func consume(subscription *subscription) {
 
 func handle(msg []byte, handler api.MessageHandler) {
 	defer _umb.handlers.Done()
-	// var event map[string]interface{}
-	logging.Debugf("Print message %+v", string(msg[:]))
-	// if err := json.Unmarshal(msg, &event); err != nil {
-	// 	logging.Error(err)
-	// }
-	// if err := handler(event); err != nil {
-	// 	logging.Error(err)
-	// }
-	if err := handler.Match(msg); err != nil {
+	if err := handler.Match(msg); err == nil {
 		handler.Handle(msg)
 	}
 }
