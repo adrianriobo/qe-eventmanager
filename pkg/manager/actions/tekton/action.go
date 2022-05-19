@@ -4,7 +4,7 @@ import (
 	"fmt"
 
 	"github.com/adrianriobo/qe-eventmanager/pkg/manager/flows"
-	tektonClient "github.com/adrianriobo/qe-eventmanager/pkg/services/ci/tekton"
+	tektonClient "github.com/adrianriobo/qe-eventmanager/pkg/services/cicd/tekton"
 	"github.com/adrianriobo/qe-eventmanager/pkg/util/json"
 	"github.com/adrianriobo/qe-eventmanager/pkg/util/logging"
 	"github.com/tektoncd/pipeline/pkg/apis/pipeline/v1beta1"
@@ -41,7 +41,7 @@ func (a TektonAction) Run(event []byte) error {
 	defer close(status)
 	defer close(informerStopper)
 	go tektonClient.AddInformer(pipelineRun.GetName(), status, informerStopper)
-	return manageResults(<-status, a.actionInfo.Success, a.actionInfo.Error)
+	return manageResults(<-status, event, a.actionInfo.Success, a.actionInfo.Error)
 
 	// xunitURL := tektonUtil.GetResultValue(runStatus.PipelineResults, xunitURLResultName)
 	// return pipelinerun.GetName(),
@@ -85,8 +85,15 @@ func parsePipelineParameters(pipelineFlowParams []flows.TektonPipelineParam,
 	return
 }
 
-func manageResults(status *v1beta1.PipelineRunStatus,
+func manageResults(status *v1beta1.PipelineRunStatus, event []byte,
 	success flows.Success, error flows.Error) error {
 	logging.Debugf("Got the pipelinestatus %v", *status)
+	artifact, _ := json.GetStringValue(event, "$.artifact")
+	logging.Debugf("Artifact from event %s", artifact)
 	return nil
 }
+
+// func manageSuccess(status *v1beta1.PipelineRunStatus,
+// 	success flows.Success) error {
+// 	return nil
+// }

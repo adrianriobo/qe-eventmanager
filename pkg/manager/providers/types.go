@@ -16,6 +16,7 @@ type UMB struct {
 
 type Tekton struct {
 	Namespace  string      `yaml:"namespace"`
+	ConsoleURL string      `yaml:"consoleURL"`
 	Workspaces []Workspace `yaml:"workspaces"`
 	Kubeconfig string      `yaml:"kubeconfig-data,omitempty"`
 }

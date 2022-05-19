@@ -1,7 +1,7 @@
-package rhel
+package ocp
 
 import (
-	"github.com/adrianriobo/qe-eventmanager/pkg/events/interop"
+	"github.com/adrianriobo/qe-eventmanager/pkg/events/redhat/interop"
 )
 
 type BuildComplete struct {
@@ -42,22 +42,17 @@ type Artifact struct {
 }
 
 type Product struct {
-	Architecture string        `json:"architecture"`
-	Artifacts    []interface{} `json:"artifacts"`
-	Build        string        `json:"build"`
-	Id           string        `json:"id"`
-	Image        string        `json:"image"`
-	Name         string        `json:"name"`
-	NVR          string        `json:"nvr"`
-	Phase        string        `json:"phase"`
-	Release      string        `json:"release"`
-	Repos        []Repository  `json:"repos"`
-	State        string        `json:"state"`
-	ProductType  string        `json:"type"`
-	Version      string        `json:"version"`
-}
-
-type Repository struct {
-	Base_Url string `json:"base_url"`
-	Name     string `json:"name"`
+	Id                       string        `json:"id"`
+	NVR                      string        `json:"nvr"`
+	Name                     string        `json:"name"`
+	Version                  string        `json:"version"`
+	Architecture             string        `json:"architecture"`
+	Build                    string        `json:"build"`
+	Internal_build_index_url string        `json:"internal_build_index_url"`
+	External_build_index_url string        `json:"external_build_index_url"`
+	ProductType              string        `json:"type"`
+	State                    string        `json:"state"`
+	Artifacts                []interface{} `json:"artifacts"`
+	Phase                    string        `json:"phase"`
+	Release                  string        `json:"release"`
 }

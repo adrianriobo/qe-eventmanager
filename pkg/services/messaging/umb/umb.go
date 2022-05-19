@@ -117,7 +117,9 @@ func consume(subscription *subscription) {
 func handle(msg []byte, handler api.MessageHandler) {
 	defer _umb.handlers.Done()
 	if err := handler.Match(msg); err == nil {
-		handler.Handle(msg)
+		if err := handler.Handle(msg); err != nil {
+			logging.Error(err)
+		}
 	}
 }
 
