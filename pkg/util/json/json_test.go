@@ -1,8 +1,21 @@
 package json
 
 import (
+	"encoding/json"
+	"strings"
 	"testing"
+
+	"github.com/adrianriobo/qe-eventmanager/pkg/util/logging"
 )
+
+type Artifact struct {
+	Products []Product `json:"products"`
+}
+
+type Product struct {
+	ID  string `json:"id"`
+	NVR string `json:"nvr"`
+}
 
 const event = `
 {
@@ -31,7 +44,6 @@ func TestMatching(t *testing.T) {
 }
 
 func TestNotMatching(t *testing.T) {
-
 	match, err := MatchFilters([]byte(event), []string{"$.artifact.products[?(@.nvr=='not-found')].nvr"})
 	if match || err == nil {
 		t.Fatal("Expression should not match")
@@ -52,5 +64,40 @@ func TestGetStringValueNotFound(t *testing.T) {
 	expectedValue := ""
 	if value != expectedValue || err == nil {
 		t.Fatal("Expression should not match")
+	}
+}
+
+func TestGetNodeValueFound(t *testing.T) {
+	value, err := GetNodeAsByteArray([]byte(event), "$.artifact")
+	valueAsString := trim(value)
+	logging.Debugf("value for node %s", valueAsString)
+	expectedValue := `{
+	"products": [{
+		"id": "",
+		"nvr": "found"
+	}, {
+		"id": "foo",
+		"nvr": "bar"
+	}]}`
+	planeExpected := trim([]byte(expectedValue))
+	if valueAsString != planeExpected || err != nil {
+		t.Fatal("Expression should match")
+	}
+}
+
+func trim(event []byte) string {
+	eventWithoutN := strings.ReplaceAll(string(event), "\n", "")
+	return strings.ReplaceAll(eventWithoutN, "\t", "")
+}
+
+func TestMarshalling(t *testing.T) {
+	value, err := GetNodeAsByteArray([]byte(event), "$.artifact")
+	var artifact Artifact
+	if err == nil {
+		logging.Debugf("value for node %s", string(value))
+		err = json.Unmarshal(value, &artifact)
+	}
+	if len(artifact.Products) != 2 || err != nil {
+		t.Fatal("Expression should match")
 	}
 }

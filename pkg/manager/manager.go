@@ -14,7 +14,7 @@ import (
 	"github.com/adrianriobo/qe-eventmanager/pkg/manager/flows"
 	inputsUMB "github.com/adrianriobo/qe-eventmanager/pkg/manager/inputs/umb"
 	"github.com/adrianriobo/qe-eventmanager/pkg/manager/providers"
-	"github.com/adrianriobo/qe-eventmanager/pkg/services/ci/tekton"
+	tektonClient "github.com/adrianriobo/qe-eventmanager/pkg/services/cicd/tekton"
 	"github.com/adrianriobo/qe-eventmanager/pkg/services/messaging/umb"
 	"github.com/adrianriobo/qe-eventmanager/pkg/util"
 	"github.com/adrianriobo/qe-eventmanager/pkg/util/file"
@@ -85,10 +85,10 @@ func loadFiles(providersFilePath string, flowsFilePath []string) (*providers.Pro
 }
 
 func createTektonClient(info providers.Tekton) (err error) {
-	var workspaces []tekton.WorkspaceBinding
+	var workspaces []tektonClient.WorkspaceBinding
 	if len(info.Workspaces) > 0 {
 		for _, item := range info.Workspaces {
-			var adaptedItem tekton.WorkspaceBinding
+			var adaptedItem tektonClient.WorkspaceBinding
 			adaptedItem.Name = item.Name
 			adaptedItem.PVC = item.PVC
 			workspaces = append(workspaces, adaptedItem)
@@ -101,7 +101,7 @@ func createTektonClient(info providers.Tekton) (err error) {
 			return
 		}
 	}
-	return tekton.CreateClient(kubeconfig, info.Namespace, workspaces)
+	return tektonClient.CreateClient(kubeconfig, info.Namespace, workspaces, info.ConsoleURL)
 }
 
 func createUMBClient(info providers.UMB) (err error) {

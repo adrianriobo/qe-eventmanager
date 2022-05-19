@@ -14,6 +14,7 @@ import (
 	"k8s.io/client-go/rest"
 	"k8s.io/client-go/tools/cache"
 	"k8s.io/client-go/tools/clientcmd"
+	"knative.dev/pkg/apis"
 )
 
 type tektonClient struct {
@@ -21,6 +22,8 @@ type tektonClient struct {
 	namespace       string
 	workspaces      []v1beta1.WorkspaceBinding
 	defaultDuration v1.Duration
+	// https://console-openshift-console.apps.ocp4.prod.psi.redhat.com/k8s/ns/codeready-container/tekton.dev~v1beta1~PipelineRun/crc-monitoring-release-zvpqh
+	consoleURL string
 }
 
 type WorkspaceBinding struct {
@@ -30,7 +33,8 @@ type WorkspaceBinding struct {
 
 var _client *tektonClient
 
-func CreateClient(kubeconfig []byte, namespace string, workspaces []WorkspaceBinding) (err error) {
+func CreateClient(kubeconfig []byte, namespace string,
+	workspaces []WorkspaceBinding, consoleURL string) (err error) {
 	_client = &tektonClient{}
 	_client.clientset, err = createClientset(kubeconfig)
 	if len(namespace) > 0 {
@@ -43,11 +47,17 @@ func CreateClient(kubeconfig []byte, namespace string, workspaces []WorkspaceBin
 	}
 	// Move this to providers configuration file
 	_client.defaultDuration = v1.Duration{Duration: 8 * time.Hour}
+	_client.consoleURL = consoleURL
 	return
 }
 
 func GetDefaultNamespace() string {
 	return _client.namespace
+}
+
+func GetPipelinerunDashboardUrl(pipelinerunName string) string {
+	return fmt.Sprintf("%s/k8s/ns/%s/tekton.dev~v1beta1~PipelineRun/%s",
+		_client.consoleURL, _client.namespace, pipelinerunName)
 }
 
 func ApplyPipelinerun(spec *v1beta1.PipelineRun) (*v1beta1.PipelineRun, error) {
@@ -74,15 +84,18 @@ func AddInformer(pipelinerunName string, status chan *v1beta1.PipelineRunStatus,
 			logging.Error("error formatting pipelinerun")
 		}
 		logging.Debugf("Change on pipelinerun %s", pipelineRun.GetName())
-		if pipelineRun.GetName() == pipelinerunName &&
-			(pipelineRun.IsDone() && waitForResults(pipelineRun) ||
-				pipelineRun.IsCancelled() ||
-				pipelineRun.IsTimedOut()) {
+		if notifyStatus(pipelineRun) {
 			// Send the status of the pipelinerun when is done
 			status <- &pipelineRun.Status
 		}
 	}})
 	informer.Run(informerStopper)
+}
+
+func notifyStatus(pipelineRun *v1beta1.PipelineRun) bool {
+	condition := pipelineRun.Status.GetCondition(apis.ConditionSucceeded)
+	return (condition.Reason == string(v1beta1.PipelineRunReasonSuccessful) && waitForResults(pipelineRun)) ||
+		condition.Reason == string(v1beta1.PipelineRunReasonFailed)
 }
 
 func waitForResults(pipelineRun *v1beta1.PipelineRun) bool {

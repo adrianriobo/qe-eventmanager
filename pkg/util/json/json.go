@@ -26,20 +26,36 @@ func MatchFilters(event []byte, filters []string) (bool, error) {
 }
 
 func GetStringValue(event []byte, jsonPath string) (string, error) {
-	root, err := ajson.Unmarshal(event)
+	node, err := getNode(event, jsonPath)
 	if err != nil {
 		return "", err
 	}
-	nodes, err := root.JSONPath(jsonPath)
-	if err != nil {
-		return "", fmt.Errorf("error with %v", err)
-	}
-	if len(nodes) != 1 {
-		return "", fmt.Errorf("error with %v", err)
-	}
-	if value, err := nodes[0].GetString(); err != nil {
+	if value, err := node.GetString(); err != nil {
 		return "", fmt.Errorf("error with %v", err)
 	} else {
 		return value, nil
 	}
+}
+
+func GetNodeAsByteArray(event []byte, jsonPath string) ([]byte, error) {
+	node, err := getNode(event, jsonPath)
+	if err != nil {
+		return nil, err
+	}
+	return ajson.Marshal(node)
+}
+
+func getNode(event []byte, jsonPath string) (*ajson.Node, error) {
+	root, err := ajson.Unmarshal(event)
+	if err != nil {
+		return nil, err
+	}
+	nodes, err := root.JSONPath(jsonPath)
+	if err != nil {
+		return nil, fmt.Errorf("error with %v", err)
+	}
+	if len(nodes) != 1 {
+		return nil, fmt.Errorf("error with %v", err)
+	}
+	return nodes[0], nil
 }

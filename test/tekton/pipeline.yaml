@@ -36,6 +36,14 @@ spec:
     value: $(tasks.main.results.result2)
 
   tasks:
+  - name: pre
+    taskSpec:
+      steps:
+      - name: pre
+        image: registry.access.redhat.com/ubi8/ubi-minimal
+        script: |
+          #!/bin/sh
+          echo "hellow world"
   - name: main
     taskSpec:
       params:
