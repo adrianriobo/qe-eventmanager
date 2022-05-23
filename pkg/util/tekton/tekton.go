@@ -5,6 +5,7 @@ import (
 	"github.com/adrianriobo/qe-eventmanager/pkg/util/logging"
 	"github.com/adrianriobo/qe-eventmanager/pkg/util/xunit"
 	"github.com/tektoncd/pipeline/pkg/apis/pipeline/v1beta1"
+	"knative.dev/pkg/apis"
 )
 
 const (
@@ -38,4 +39,17 @@ func GetResultState(url string) string {
 		return resultStatusPassed
 	}
 	return resultStatusFailed
+}
+
+func IsSuccessful(status *v1beta1.PipelineRunStatus) bool {
+	return isCondition(status, v1beta1.PipelineRunReasonSuccessful)
+}
+
+func IsFailed(status *v1beta1.PipelineRunStatus) bool {
+	return isCondition(status, v1beta1.PipelineRunReasonFailed)
+}
+
+func isCondition(status *v1beta1.PipelineRunStatus, reason v1beta1.PipelineRunReason) bool {
+	condition := status.GetCondition(apis.ConditionSucceeded)
+	return condition.Reason == string(reason)
 }

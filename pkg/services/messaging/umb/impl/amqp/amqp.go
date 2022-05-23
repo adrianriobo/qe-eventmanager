@@ -87,7 +87,7 @@ func (c *Client) Subscribe(destination string,
 }
 
 func (c *Client) Send(destination string, message interface{}) error {
-	topic := fmt.Sprintf("/topic/%s", destination)
+	topic := fmt.Sprintf("topic://%s", destination)
 	sender, err := c.Session.NewSender(
 		amqp.LinkTargetAddress(topic),
 	)

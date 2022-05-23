@@ -3,10 +3,15 @@ package tekton
 import (
 	"fmt"
 
+	"golang.org/x/exp/slices"
+
+	"github.com/adrianriobo/qe-eventmanager/pkg/events"
 	"github.com/adrianriobo/qe-eventmanager/pkg/manager/flows"
 	tektonClient "github.com/adrianriobo/qe-eventmanager/pkg/services/cicd/tekton"
+	"github.com/adrianriobo/qe-eventmanager/pkg/services/messaging/umb"
 	"github.com/adrianriobo/qe-eventmanager/pkg/util/json"
 	"github.com/adrianriobo/qe-eventmanager/pkg/util/logging"
+	tektonUtil "github.com/adrianriobo/qe-eventmanager/pkg/util/tekton"
 	"github.com/tektoncd/pipeline/pkg/apis/pipeline/v1beta1"
 	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
@@ -41,14 +46,8 @@ func (a TektonAction) Run(event []byte) error {
 	defer close(status)
 	defer close(informerStopper)
 	go tektonClient.AddInformer(pipelineRun.GetName(), status, informerStopper)
-	return manageResults(<-status, event, a.actionInfo.Success, a.actionInfo.Error)
-
-	// xunitURL := tektonUtil.GetResultValue(runStatus.PipelineResults, xunitURLResultName)
-	// return pipelinerun.GetName(),
-	// 	xunitURL,
-	// 	tektonUtil.GetResultValue(runStatus.PipelineResults, qeDurationResultName),
-	// 	tektonUtil.GetResultState(xunitURL),
-	// 	nil
+	return manageResults(<-status, pipelineRun.GetName(),
+		event, a.actionInfo.Success, a.actionInfo.Error)
 }
 
 func createPipelineRun(pipelineName string, params []v1beta1.Param) *v1beta1.PipelineRun {
@@ -85,15 +84,80 @@ func parsePipelineParameters(pipelineFlowParams []flows.TektonPipelineParam,
 	return
 }
 
-func manageResults(status *v1beta1.PipelineRunStatus, event []byte,
-	success flows.Success, error flows.Error) error {
-	logging.Debugf("Got the pipelinestatus %v", *status)
-	artifact, _ := json.GetStringValue(event, "$.artifact")
-	logging.Debugf("Artifact from event %s", artifact)
+func manageResults(status *v1beta1.PipelineRunStatus, pipelineRunName string,
+	event []byte, success flows.Success, errorFlow flows.Error) error {
+	if tektonUtil.IsSuccessful(status) {
+		return manageSuccess(status, pipelineRunName, event, success)
+	}
+	return manageError(pipelineRunName, event, errorFlow)
+}
+
+func manageSuccess(status *v1beta1.PipelineRunStatus, pipelineRunName string,
+	event []byte, success flows.Success) error {
+	if success.UMB.EventSchema == events.RedHatInteropOCPTestComplete ||
+		success.UMB.EventSchema == events.RedHatInteropRHELTestComplete {
+		//Default jsonpath could be passed as fields
+		artifactNode, err := json.GetNodeAsByteArray([]byte(event), "$.artifact")
+		if err != nil {
+			return err
+		}
+		systemNode, err := json.GetNodeAsByteArray([]byte(event), "$.system")
+		if err != nil {
+			return err
+		}
+		dashboardURL := tektonClient.GetPipelinerunDashboardUrl(pipelineRunName)
+		xunitURLs, duration, resultStatus :=
+			getPipelineRunResults(status, pipelineRunName, success)
+		response, err := events.GenerateRedHatInteropTestComplete(success.UMB.EventSchema,
+			dashboardURL, xunitURLs, duration, resultStatus, artifactNode, systemNode)
+		if err != nil {
+			return err
+		}
+		return umb.Send(success.UMB.Topic, response)
+	}
 	return nil
 }
 
-// func manageSuccess(status *v1beta1.PipelineRunStatus,
-// 	success flows.Success) error {
-// 	return nil
-// }
+func manageError(pipelineRunName string,
+	event []byte, errorFLow flows.Error) error {
+	if errorFLow.UMB.EventSchema == events.RedHatInteropOCPTestError ||
+		errorFLow.UMB.EventSchema == events.RedHatInteropRHELTestError {
+		//Default jsonpath could be passed as fields
+		artifactNode, err := json.GetNodeAsByteArray([]byte(event), "$.artifact")
+		if err != nil {
+			return err
+		}
+		systemNode, err := json.GetNodeAsByteArray([]byte(event), "$.system")
+		if err != nil {
+			return err
+		}
+		dashboardURL := tektonClient.GetPipelinerunDashboardUrl(pipelineRunName)
+		response, err := events.GenerateRedHatInteropTestError(errorFLow.UMB.EventSchema,
+			dashboardURL, artifactNode, systemNode)
+		if err != nil {
+			return err
+		}
+		return umb.Send(errorFLow.UMB.Topic, response)
+	}
+	return nil
+}
+
+func getPipelineRunResults(status *v1beta1.PipelineRunStatus, pipelineRunName string,
+	success flows.Success) (xunitURLs, duration, resultStatus string) {
+	xunitURLs = tektonUtil.GetResultValue(status.PipelineResults,
+		getPipelineResultItem(success, events.RedHatInteropXunitURL))
+	duration = tektonUtil.GetResultValue(status.PipelineResults,
+		getPipelineResultItem(success, events.RedHatInteropDuration))
+	resultStatus = tektonUtil.GetResultValue(status.PipelineResults,
+		getPipelineResultItem(success, events.RedHatInteropResultStatus))
+	return
+}
+
+func getPipelineResultItem(success flows.Success, item string) string {
+	idx := slices.IndexFunc(success.UMB.EventFields,
+		func(e flows.UMBEventField) bool { return e.Name == item })
+	if idx == -1 {
+		return ""
+	}
+	return success.UMB.EventFields[idx].PipelineResultName
+}
