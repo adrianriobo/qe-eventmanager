@@ -22,8 +22,7 @@ type tektonClient struct {
 	namespace       string
 	workspaces      []v1beta1.WorkspaceBinding
 	defaultDuration v1.Duration
-	// https://console-openshift-console.apps.ocp4.prod.psi.redhat.com/k8s/ns/codeready-container/tekton.dev~v1beta1~PipelineRun/crc-monitoring-release-zvpqh
-	consoleURL string
+	consoleURL      string
 }
 
 type WorkspaceBinding struct {
