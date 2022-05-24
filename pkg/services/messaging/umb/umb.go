@@ -118,7 +118,7 @@ func handle(msg []byte, handler api.MessageHandler) {
 	defer _umb.handlers.Done()
 	if err := handler.Match(msg); err == nil {
 		if err := handler.Handle(msg); err != nil {
-			logging.Error(err)
+			logging.Errorf("error handling the msg %v", err)
 		}
 	}
 }

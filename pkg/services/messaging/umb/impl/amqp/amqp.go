@@ -95,7 +95,7 @@ func (c *Client) Send(destination string, message interface{}) error {
 		return err
 	}
 	ctx, cancel := context.WithTimeout(context.TODO(),
-		5*time.Second)
+		30*time.Second)
 	jsonData, err := json.Marshal(message)
 	if err != nil {
 		logging.Errorf("Failed to marshal data")

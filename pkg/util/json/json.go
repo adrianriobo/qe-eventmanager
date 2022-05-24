@@ -7,6 +7,10 @@ import (
 	"github.com/spyzhov/ajson"
 )
 
+const (
+	JSONPathPreffix = "$."
+)
+
 func MatchFilters(event []byte, filters []string) (bool, error) {
 	root, err := ajson.Unmarshal(event)
 	if err != nil {

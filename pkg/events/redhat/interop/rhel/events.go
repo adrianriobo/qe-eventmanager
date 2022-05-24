@@ -8,7 +8,8 @@ import (
 )
 
 func CreateTestComplete(dahsboardURL, xunitURL,
-	duration, resultStatus string, artifactFromEvent []byte, systemFromEvent []byte) (*TestComplete, error) {
+	duration, resultStatus, contactName, contactEmail string,
+	artifactFromEvent []byte, systemFromEvent []byte) (*TestComplete, error) {
 	var artifact Artifact
 	if err := getNode(artifactFromEvent, artifact); err != nil {
 		return nil, err
@@ -24,6 +25,10 @@ func CreateTestComplete(dahsboardURL, xunitURL,
 			Log: dahsboardURL},
 		GenerateAt: time.Now().Format(time.RFC3339Nano),
 		System:     system,
+		Contact: interop.Contact{
+			Name:  contactName,
+			Email: contactEmail,
+		},
 		Test: interop.Test{
 			Category:  "interoperability",
 			Namespace: "interop",
@@ -33,7 +38,8 @@ func CreateTestComplete(dahsboardURL, xunitURL,
 			XunitUrls: []string{xunitURL}}}, nil
 }
 
-func CreateTestError(dahsboardURL string, artifactFromEvent, systemFromEvent []byte) (*TestError, error) {
+func CreateTestError(dahsboardURL, contactName, contactEmail string,
+	artifactFromEvent, systemFromEvent []byte) (*TestError, error) {
 	var artifact Artifact
 	if err := getNode(artifactFromEvent, artifact); err != nil {
 		return nil, err
@@ -49,6 +55,10 @@ func CreateTestError(dahsboardURL string, artifactFromEvent, systemFromEvent []b
 			Log: dahsboardURL},
 		GenerateAt: time.Now().Format(time.RFC3339Nano),
 		System:     system,
+		Contact: interop.Contact{
+			Name:  contactName,
+			Email: contactEmail,
+		},
 		Error: interop.Error{
 			Reason: "Testing failed due to infrastructure issues",
 		},
