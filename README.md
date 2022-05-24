@@ -44,14 +44,14 @@ input:
   umb:
     topic: topic-to-consume
     filters:
-      - jsonpath: $.estrcuture.list[?(@.field1=='value1')].field1
-      - jsonpath: $.estrcuture.list[?(@.field2=='value2')].field1
+      - $.estrcuture.list[?(@.field1=='value1')].field1
+      - $.estrcuture.list[?(@.field2=='value2')].field1
 action:
   tektonPipeline:
     name: XXX
     params:
     - name: foo
-      jsonpath: $.estrcuture.list[(@.field=='foo')].id # $. jsonpath expression function
+      value: $.estrcuture.list[(@.field=='foo')].id # $. jsonpath expression function
     - name: bar
       value: bar # constant string 
   success:
@@ -60,18 +60,16 @@ action:
       eventSchema: message-schema-to-send
       eventFields:
       - name: foo
-        pipelineResultName: foo # Pick value from pipeline results
+        value: $(pipeline.results.result1) # Pick value from pipeline results result1 
       - name: bar
-        pipelineParamaterName: bar # Pick value from pipeline parameters
-      - name: baz
-        value: baz # constant string
+        value: bar # constant string
   error:
     umb:
       topic: topic-to-produce
       eventSchema: message-schema-to-send
       eventFields:
-      - name: error
-        pipelineResultName: error
+      - name: baz
+        value: baz
 ```
 
 ## Build

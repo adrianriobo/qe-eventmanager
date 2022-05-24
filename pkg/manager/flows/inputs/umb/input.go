@@ -3,8 +3,8 @@ package umb
 import (
 	"fmt"
 
-	"github.com/adrianriobo/qe-eventmanager/pkg/manager/actions"
 	"github.com/adrianriobo/qe-eventmanager/pkg/manager/flows"
+	"github.com/adrianriobo/qe-eventmanager/pkg/manager/flows/actions"
 	"github.com/adrianriobo/qe-eventmanager/pkg/services/messaging/umb"
 	"github.com/adrianriobo/qe-eventmanager/pkg/services/messaging/umb/api"
 	"github.com/adrianriobo/qe-eventmanager/pkg/util/json"
@@ -22,10 +22,10 @@ func Add(input flows.UMBInput, action actions.Runnable) error {
 
 type umbFlow struct {
 	action  actions.Runnable
-	filters []flows.UMBInputFilter
+	filters []string
 }
 
-func new(filters []flows.UMBInputFilter, action actions.Runnable) umbFlow {
+func new(filters []string, action actions.Runnable) umbFlow {
 	return umbFlow{
 		action:  action,
 		filters: filters}
@@ -38,7 +38,7 @@ func (u umbFlow) Handle(event []byte) error {
 func (u umbFlow) Match(event []byte) error {
 	var filters []string
 	for _, filter := range u.filters {
-		filters = append(filters, filter.JSONPath)
+		filters = append(filters, filter)
 	}
 	match, err := json.MatchFilters(event, filters)
 	if err != nil {
