@@ -1,15 +1,19 @@
-package rhel
+package ocp
 
 import (
 	"encoding/json"
 	"time"
 
-	"github.com/adrianriobo/qe-eventmanager/pkg/events/redhat/interop"
+	"github.com/adrianriobo/qe-eventmanager/pkg/manager/events/redhat/interop"
 )
 
 func CreateTestComplete(dahsboardURL, xunitURL,
 	duration, resultStatus, contactName, contactEmail string,
 	artifactFromEvent []byte, systemFromEvent []byte) (*TestComplete, error) {
+	// artifact, err := getArtifact(artifactFromEvent)
+	// if err != nil {
+	// 	return nil, err
+	// }
 	var artifact Artifact
 	if err := getNode(artifactFromEvent, artifact); err != nil {
 		return nil, err

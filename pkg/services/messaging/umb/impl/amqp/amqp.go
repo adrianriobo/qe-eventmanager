@@ -2,7 +2,6 @@ package amqp
 
 import (
 	"context"
-	"encoding/json"
 	"fmt"
 	"time"
 
@@ -63,6 +62,10 @@ func (s Subscription) Read() ([]byte, error) {
 	if err != nil {
 		return nil, err
 	}
+	err = s.Receiver.AcceptMessage(context.TODO(), msg)
+	if err != nil {
+		return nil, err
+	}
 	if msg.GetData() == nil {
 		return []byte(fmt.Sprintf("%v", msg.Value)), nil
 	}
@@ -86,7 +89,7 @@ func (c *Client) Subscribe(destination string,
 	return &Subscription{Receiver: receiver}, nil
 }
 
-func (c *Client) Send(destination string, message interface{}) error {
+func (c *Client) Send(destination string, message []byte) error {
 	topic := fmt.Sprintf("topic://%s", destination)
 	sender, err := c.Session.NewSender(
 		amqp.LinkTargetAddress(topic),
@@ -96,13 +99,7 @@ func (c *Client) Send(destination string, message interface{}) error {
 	}
 	ctx, cancel := context.WithTimeout(context.TODO(),
 		30*time.Second)
-	jsonData, err := json.Marshal(message)
-	if err != nil {
-		logging.Errorf("Failed to marshal data")
-		cancel()
-		return err
-	}
-	err = sender.Send(ctx, amqp.NewMessage(jsonData))
+	err = sender.Send(ctx, amqp.NewMessage(message))
 	if err != nil {
 		cancel()
 		return err

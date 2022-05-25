@@ -3,8 +3,8 @@ package events
 import (
 	"fmt"
 
-	"github.com/adrianriobo/qe-eventmanager/pkg/events/redhat/interop/ocp"
-	"github.com/adrianriobo/qe-eventmanager/pkg/events/redhat/interop/rhel"
+	"github.com/adrianriobo/qe-eventmanager/pkg/manager/events/redhat/interop/ocp"
+	"github.com/adrianriobo/qe-eventmanager/pkg/manager/events/redhat/interop/rhel"
 )
 
 func GenerateRedHatInteropTestComplete(eventSchema, dahsboardURL,

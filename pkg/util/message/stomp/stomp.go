@@ -73,17 +73,21 @@ func (c *Connection) Connect() (err error) {
 }
 
 func (c *Connection) FailoverSend(destination string, body interface{}, opts ...func(*frame.Frame) error) error {
-	var retryCount uint
 
-	jsonData, err := json.Marshal(body)
+	marshalledData, err := json.Marshal(body)
 	if err != nil {
 		logging.Errorf("Failed to marshal data")
 		return err
 	}
+	return c.FailoverSendBytes(destination, marshalledData, opts...)
+}
+
+func (c *Connection) FailoverSendBytes(destination string, body []byte, opts ...func(*frame.Frame) error) (err error) {
+	var retryCount uint
 
 	opts = append(opts, stomp.SendOpt.NoContentLength)
 	for retryCount = 0; retryCount <= c.FailoverRetryCount; retryCount++ {
-		err = c.stompConn.Send(destination, "application/json", jsonData, opts...)
+		err = c.stompConn.Send(destination, "application/json", body, opts...)
 		if err == nil {
 			break
 		}

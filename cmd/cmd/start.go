@@ -11,15 +11,14 @@ import (
 )
 
 const (
-	providersFilePath string = "providers-filepath"
-	flowsFilePath     string = "flows-filepath"
+	flowsFilePath string = "flows-filepath"
 )
 
 func init() {
 	rootCmd.AddCommand(startCmd)
 	flagSet := pflag.NewFlagSet("start", pflag.ExitOnError)
 	flagSet.StringP(providersFilePath, "p", "", "Credentials and defaults for integrated providers")
-	flagSet.StringP(flowsFilePath, "r", "", "List of comma separated file paths of rules")
+	flagSet.StringP(flowsFilePath, "f", "", "List of comma separated file paths of rules")
 	startCmd.Flags().AddFlagSet(flagSet)
 }
 

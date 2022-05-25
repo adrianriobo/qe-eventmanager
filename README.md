@@ -8,6 +8,33 @@ Sample app for handling qe events
 
 UMB integration with qe platform
 
+## Roles
+
+The manager can act as a manager handling integration based on flow definitions, or it can act as a tool to interact within the providers configured.
+
+### Actioner
+
+As an actioner the cli allows to run single actions:
+
+* Send an UMB menssage
+
+```bash
+./qe-eventmanager umb send -p providers.yaml \
+                           -m message.json \
+                           -d VirtualTopic.sample
+```
+
+### Manager
+
+As a manager integrate providers based on flow definitnions:
+
+```bash
+./qe-eventmanager start -p providers.yaml \
+                        -f flow1.yaml,flow2.yaml
+```
+
+A simple overview on an umb-tekton integration
+
 ![Overview](docs/diagrams/overview.jpg?raw=true)
 
 ## Configuration
@@ -74,18 +101,15 @@ action:
 
 ## Build
 
+### Cli
+
 ```bash
-podman build -t quay.io/ariobolo/qe-eventmanager:$VERSION -f images/builder/Dockerfile .
+make clean
+make build
 ```
 
-## Deploy
+### Container
 
 ```bash
-# Create config
-manifest/create-config.sh $CA_FILE_PATH $CERTIFICATE_FILE_PATH $KEY_FILE_PATH $BROKERS
-
-# Deploy resources
-oc apply -f manifest/config.yaml
-oc apply -f manifest/rbac.yaml
-oc apply -f manifest/deployment.yaml
+make container-build
 ```
