@@ -11,24 +11,26 @@ import (
 	"github.com/adrianriobo/qe-eventmanager/pkg/util/logging"
 )
 
-func Add(input flows.UMBInput, action actions.Runnable) error {
+func Add(flowName string, input flows.UMBInput, action actions.Runnable) error {
 	if err := umb.Subscribe(
 		input.Topic,
-		[]api.MessageHandler{new(input.Filters, action)}); err != nil {
+		[]api.MessageHandler{new(flowName, input.Filters, action)}); err != nil {
 		return err
 	}
 	return nil
 }
 
 type umbFlow struct {
-	action  actions.Runnable
-	filters []string
+	flowName string
+	action   actions.Runnable
+	filters  []string
 }
 
-func new(filters []string, action actions.Runnable) umbFlow {
+func new(flowName string, filters []string, action actions.Runnable) umbFlow {
 	return umbFlow{
-		action:  action,
-		filters: filters}
+		flowName: flowName,
+		action:   action,
+		filters:  filters}
 }
 
 func (u umbFlow) Handle(event []byte) error {
@@ -47,5 +49,6 @@ func (u umbFlow) Match(event []byte) error {
 	if !match {
 		return fmt.Errorf("filters do not match, message will not be processed")
 	}
+	logging.Debug("Found event marching the filters for flow %s", u.flowName)
 	return nil
 }

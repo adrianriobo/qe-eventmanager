@@ -105,7 +105,7 @@ func (c *Client) Send(destination string, message []byte) error {
 		return err
 	}
 	if err := sender.Close(ctx); err != nil {
-		logging.Error("Error closing the amqp sender")
+		logging.Error("Error closing the amqp sender %v", err)
 	}
 	cancel()
 	return nil

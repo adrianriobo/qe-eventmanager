@@ -32,16 +32,17 @@ func (a TektonAction) Run(event []byte) error {
 	// Create the pipelinerun spec with params from event
 	pipelineRunSpec := createPipelineRun(
 		a.actionInfo.Name, pipelineRunParameters)
-	logging.Debugf("Creating pipelinerun spec: %v", *pipelineRunSpec)
 	// Use tekton client to create the run
 	pipelineRun, err := tektonClient.ApplyPipelinerun(pipelineRunSpec)
 	if err != nil {
 		return err
 	}
+	logging.Debugf("Created pipelinerun : %v", pipelineRun)
 	status := make(chan *v1beta1.PipelineRunStatus)
 	informerStopper := make(chan struct{})
 	defer close(status)
 	defer close(informerStopper)
+	logging.Debugf("Added informer for pipelinerun %s", pipelineRun.GetName())
 	go tektonClient.AddInformer(pipelineRun.GetName(), status, informerStopper)
 	return manageResults(<-status, pipelineRun.GetName(),
 		event, a.actionInfo.Success, a.actionInfo.Error)

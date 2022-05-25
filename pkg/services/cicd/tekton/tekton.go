@@ -8,7 +8,7 @@ import (
 	"github.com/adrianriobo/qe-eventmanager/pkg/util/logging"
 	v1beta1 "github.com/tektoncd/pipeline/pkg/apis/pipeline/v1beta1"
 	clientset "github.com/tektoncd/pipeline/pkg/client/clientset/versioned"
-	informers "github.com/tektoncd/pipeline/pkg/client/informers/externalversions/pipeline/v1beta1"
+	informers "github.com/tektoncd/pipeline/pkg/client/informers/externalversions"
 	corev1 "k8s.io/api/core/v1"
 	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/rest"
@@ -69,26 +69,38 @@ func ApplyPipelinerun(spec *v1beta1.PipelineRun) (*v1beta1.PipelineRun, error) {
 		Create(context.Background(), spec, v1.CreateOptions{})
 }
 
-// DESIGN best approach one informer per run or one informer and some async mechanism from there
-// when we get the status result on the generated pipelinerun we can close the informer
+// func(options *v1.ListOptions) {
+// 	options.FieldSelector = fields.OneTermEqualSelector("metadata.name", "app-config").String()
+// }
 func AddInformer(pipelinerunName string, status chan *v1beta1.PipelineRunStatus, informerStopper chan struct{}) {
 	if err := checkInitialization(); err != nil {
 		logging.Error(err)
 	}
-	// https://github.com/kubernetes-client/java/issues/725
-	informer := informers.NewPipelineRunInformer(_client.clientset, _client.namespace, 2*time.Minute, nil)
-	informer.AddEventHandler(cache.ResourceEventHandlerFuncs{UpdateFunc: func(oldObj, newObj interface{}) {
-		pipelineRun, ok := newObj.(*v1beta1.PipelineRun)
-		if !ok {
-			logging.Error("error formatting pipelinerun")
-		}
-		logging.Debugf("Change on pipelinerun %s", pipelineRun.GetName())
-		if notifyStatus(pipelineRun) {
-			// Send the status of the pipelinerun when is done
-			status <- &pipelineRun.Status
-		}
-	}})
-	informer.Run(informerStopper)
+	pipelineRunsInformer := informers.NewSharedInformerFactoryWithOptions(
+		_client.clientset, 2*time.Minute,
+		informers.WithNamespace(_client.namespace)).
+		Tekton().V1beta1().PipelineRuns().Informer()
+	pipelineRunsInformer.AddEventHandler(cache.FilteringResourceEventHandler{
+		FilterFunc: func(obj interface{}) bool {
+			pipelineRun, ok := obj.(*v1beta1.PipelineRun)
+			if !ok {
+				logging.Error("error formatting pipelinerun")
+				return false
+			}
+			if pipelineRun.GetName() == pipelinerunName &&
+				notifyStatus(pipelineRun) {
+				return true
+			}
+			return false
+		},
+		Handler: cache.ResourceEventHandlerFuncs{
+			AddFunc: func(obj interface{}) {
+				pipelineRun, _ := obj.(*v1beta1.PipelineRun)
+				status <- &pipelineRun.Status
+			},
+		},
+	})
+	pipelineRunsInformer.Run(informerStopper)
 }
 
 func notifyStatus(pipelineRun *v1beta1.PipelineRun) bool {
