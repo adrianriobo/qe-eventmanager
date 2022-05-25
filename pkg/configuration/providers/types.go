@@ -1,8 +1,8 @@
 package providers
 
 type Providers struct {
-	UMB    UMB    `yaml:"umb"`
-	Tekton Tekton `yaml:"tekton"`
+	UMB    UMB    `yaml:"umb,omitempty"`
+	Tekton Tekton `yaml:"tekton,omitempty"`
 }
 
 type UMB struct {

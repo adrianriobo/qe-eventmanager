@@ -3,7 +3,7 @@ package tekton
 import (
 	"strings"
 
-	"github.com/adrianriobo/qe-eventmanager/pkg/events"
+	"github.com/adrianriobo/qe-eventmanager/pkg/manager/events"
 	"github.com/adrianriobo/qe-eventmanager/pkg/manager/flows"
 	tektonClient "github.com/adrianriobo/qe-eventmanager/pkg/services/cicd/tekton"
 	"github.com/adrianriobo/qe-eventmanager/pkg/services/messaging/umb"

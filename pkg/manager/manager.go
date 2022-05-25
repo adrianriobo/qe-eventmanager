@@ -8,12 +8,12 @@ import (
 	"strings"
 	"syscall"
 
+	"github.com/adrianriobo/qe-eventmanager/pkg/configuration/providers"
 	"github.com/adrianriobo/qe-eventmanager/pkg/manager/flows"
 	"github.com/adrianriobo/qe-eventmanager/pkg/manager/flows/actions"
 	actionForward "github.com/adrianriobo/qe-eventmanager/pkg/manager/flows/actions/forward"
 	actionTekton "github.com/adrianriobo/qe-eventmanager/pkg/manager/flows/actions/tekton"
 	inputsUMB "github.com/adrianriobo/qe-eventmanager/pkg/manager/flows/inputs/umb"
-	"github.com/adrianriobo/qe-eventmanager/pkg/manager/providers"
 	tektonClient "github.com/adrianriobo/qe-eventmanager/pkg/services/cicd/tekton"
 	"github.com/adrianriobo/qe-eventmanager/pkg/services/messaging/umb"
 	"github.com/adrianriobo/qe-eventmanager/pkg/util"
@@ -60,11 +60,12 @@ func stop() {
 }
 
 func loadFiles(providersFilePath string, flowsFilePath []string) (*providers.Providers, *[]flows.Flow, error) {
-	var structuredProviders providers.Providers
+	var structuredProviders *providers.Providers
 	var structuredFlows []flows.Flow
+	var err error
 	if len(providersFilePath) > 0 {
-		if err := file.LoadFileAsStruct(providersFilePath, &structuredProviders); err != nil {
-			logging.Errorf("Can not load providers file: %v", err)
+		structuredProviders, err = providers.LoadFile(providersFilePath)
+		if err != nil {
 			return nil, nil, err
 		}
 	}
@@ -81,7 +82,7 @@ func loadFiles(providersFilePath string, flowsFilePath []string) (*providers.Pro
 			}
 		}
 	}
-	return &structuredProviders, &structuredFlows, nil
+	return structuredProviders, &structuredFlows, nil
 }
 
 func createTektonClient(info providers.Tekton) (err error) {
@@ -105,20 +106,9 @@ func createTektonClient(info providers.Tekton) (err error) {
 }
 
 func createUMBClient(info providers.UMB) (err error) {
-	userCertificate, err :=
-		base64.StdEncoding.DecodeString(info.UserCertificate)
+	userCertificate, userKey, certificateAuthority, err := providers.ParseUMBFiles(info)
 	if err != nil {
-		return
-	}
-	userKey, err :=
-		base64.StdEncoding.DecodeString(info.UserKey)
-	if err != nil {
-		return
-	}
-	certificateAuthority, err :=
-		base64.StdEncoding.DecodeString(info.CertificateAuthority)
-	if err != nil {
-		return
+		return err
 	}
 	err = umb.CreateClient(
 		info.ConsumerID,

@@ -1,0 +1,63 @@
+{
+    "artifact": {
+      "id": "6021",
+      "products": [
+        {
+          "architecture": "x86_64",
+          "artifacts": [],
+          "build": "GA",
+          "id": "",
+          "name": "codeready_containers",
+          "nvr": "codeready_containers-1",
+          "phase": "testing",
+          "release": "",
+          "repos": [],
+          "state": "interop ready",
+          "type": "product-build",
+          "version": "1"
+        },
+        {
+          "architecture": "x86_64",
+          "artifacts": [],
+          "build": "latest",
+          "id": "foo",
+          "image": "bar",
+          "name": "rhel",
+          "nvr": "foo",
+          "phase": "testing",
+          "release": "",
+          "repos": [
+            {
+              "base_url": "http://sample.com/compose/BaseOS/x86_64/os",
+              "name": "baseos"
+            },
+            {
+              "base_url": "http://sample.com/compose/AppStream/x86_64/os",
+              "name": "appstream"
+            }
+          ],
+          "state": "interop ready",
+          "type": "product-build",
+          "version": "9.0.0"
+        }
+      ],
+      "type": "product-scenario"
+    },
+    "contact": {
+      "docs": "none",
+      "email": "none",
+      "name": "none",
+      "team": "none",
+      "url": "none"
+    },
+    "generated_at": "2022-01-14T10:44:08.572663",
+    "system": [
+      {
+        "architecture": "x86_64",
+        "os": "RHEL",
+        "provider": "openstack",
+        "variant": "BaseOS"
+      }
+    ],
+    "version": "0.2.2"
+  }

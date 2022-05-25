@@ -50,8 +50,8 @@ func (s Subscription) Unsubscribe() (err error) {
 	return
 }
 
-func (c *Client) Send(destination string, message interface{}) error {
-	return c.Connection.FailoverSend("/topic/"+destination, message)
+func (c *Client) Send(destination string, message []byte) error {
+	return c.Connection.FailoverSendBytes("/topic/"+destination, message)
 }
 
 func (c *Client) Disconnect() {
