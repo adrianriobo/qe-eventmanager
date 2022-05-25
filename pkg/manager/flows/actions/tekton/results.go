@@ -21,8 +21,10 @@ const (
 func manageResults(status *v1beta1.PipelineRunStatus, pipelineRunName string,
 	event []byte, success flows.Success, errorFlow flows.Error) error {
 	if tektonUtil.IsSuccessful(status) {
+		logging.Debugf("Pipelinerun %s has finished successfully", pipelineRunName)
 		return manageSuccess(status, pipelineRunName, event, success)
 	}
+	logging.Debugf("Pipelinerun %s has finished with errors", pipelineRunName)
 	return manageError(status, pipelineRunName, event, errorFlow)
 }
 

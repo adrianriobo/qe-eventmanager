@@ -165,7 +165,7 @@ func getAction(flow flows.Flow) (actions.Runnable, error) {
 func addActionToInput(flow flows.Flow, action actions.Runnable) error {
 	// if flow.Input.UmbInput != nil {
 	if !util.IsEmpty(flow.Input.UMB) {
-		inputsUMB.Add(flow.Input.UMB, action)
+		inputsUMB.Add(flow.Name, flow.Input.UMB, action)
 	}
 	return nil
 }

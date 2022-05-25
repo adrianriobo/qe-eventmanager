@@ -18,26 +18,34 @@ package config
 
 import (
 	"fmt"
+	"log"
 	"os"
 	"strconv"
 	"time"
 
-	"github.com/ghodss/yaml"
 	"github.com/tektoncd/pipeline/pkg/apis/pipeline/pod"
 	corev1 "k8s.io/api/core/v1"
+	"sigs.k8s.io/yaml"
 )
 
 const (
-	DefaultTimeoutMinutes          = 60
-	NoTimeoutDuration              = 0 * time.Minute
+	// DefaultTimeoutMinutes is used when no timeout is specified.
+	DefaultTimeoutMinutes = 60
+	// NoTimeoutDuration is used when a pipeline or task should never time out.
+	NoTimeoutDuration = 0 * time.Minute
+	// DefaultServiceAccountValue is the SA used when one is not specified.
+	DefaultServiceAccountValue = "default"
+	// DefaultManagedByLabelValue is the value for the managed-by label that is used by default.
+	DefaultManagedByLabelValue = "tekton-pipelines"
+	// DefaultCloudEventSinkValue is the default value for cloud event sinks.
+	DefaultCloudEventSinkValue = ""
+
 	defaultTimeoutMinutesKey       = "default-timeout-minutes"
 	defaultServiceAccountKey       = "default-service-account"
-	DefaultServiceAccountValue     = "default"
 	defaultManagedByLabelValueKey  = "default-managed-by-label-value"
-	DefaultManagedByLabelValue     = "tekton-pipelines"
 	defaultPodTemplateKey          = "default-pod-template"
+	defaultAAPodTemplateKey        = "default-affinity-assistant-pod-template"
 	defaultCloudEventsSinkKey      = "default-cloud-events-sink"
-	DefaultCloudEventSinkValue     = ""
 	defaultTaskRunWorkspaceBinding = "default-task-run-workspace-binding"
 )
 
@@ -48,6 +56,7 @@ type Defaults struct {
 	DefaultServiceAccount          string
 	DefaultManagedByLabelValue     string
 	DefaultPodTemplate             *pod.Template
+	DefaultAAPodTemplate           *pod.AffinityAssistantTemplate
 	DefaultCloudEventsSink         string
 	DefaultTaskRunWorkspaceBinding string
 }
@@ -75,6 +84,7 @@ func (cfg *Defaults) Equals(other *Defaults) bool {
 		other.DefaultServiceAccount == cfg.DefaultServiceAccount &&
 		other.DefaultManagedByLabelValue == cfg.DefaultManagedByLabelValue &&
 		other.DefaultPodTemplate.Equals(cfg.DefaultPodTemplate) &&
+		other.DefaultAAPodTemplate.Equals(cfg.DefaultAAPodTemplate) &&
 		other.DefaultCloudEventsSink == cfg.DefaultCloudEventsSink &&
 		other.DefaultTaskRunWorkspaceBinding == cfg.DefaultTaskRunWorkspaceBinding
 }
@@ -106,10 +116,18 @@ func NewDefaultsFromMap(cfgMap map[string]string) (*Defaults, error) {
 
 	if defaultPodTemplate, ok := cfgMap[defaultPodTemplateKey]; ok {
 		var podTemplate pod.Template
-		if err := yaml.Unmarshal([]byte(defaultPodTemplate), &podTemplate); err != nil {
+		if err := yamlUnmarshal(defaultPodTemplate, defaultPodTemplateKey, &podTemplate); err != nil {
 			return nil, fmt.Errorf("failed to unmarshal %v", defaultPodTemplate)
 		}
 		tc.DefaultPodTemplate = &podTemplate
+	}
+
+	if defaultAAPodTemplate, ok := cfgMap[defaultAAPodTemplateKey]; ok {
+		var podTemplate pod.AffinityAssistantTemplate
+		if err := yamlUnmarshal(defaultAAPodTemplate, defaultAAPodTemplateKey, &podTemplate); err != nil {
+			return nil, fmt.Errorf("failed to unmarshal %v", defaultAAPodTemplate)
+		}
+		tc.DefaultAAPodTemplate = &podTemplate
 	}
 
 	if defaultCloudEventsSink, ok := cfgMap[defaultCloudEventsSinkKey]; ok {
@@ -120,6 +138,15 @@ func NewDefaultsFromMap(cfgMap map[string]string) (*Defaults, error) {
 		tc.DefaultTaskRunWorkspaceBinding = bindingYAML
 	}
 	return &tc, nil
+}
+
+func yamlUnmarshal(s string, key string, o interface{}) error {
+	b := []byte(s)
+	if err := yaml.UnmarshalStrict(b, o); err != nil {
+		log.Printf("warning: failed to decode %q: %q. Trying decode with non-strict mode", key, err)
+		return yaml.Unmarshal(b, o)
+	}
+	return nil
 }
 
 // NewDefaultsFromConfigMap returns a Config for the given configmap

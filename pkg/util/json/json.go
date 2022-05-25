@@ -3,7 +3,6 @@ package json
 import (
 	"fmt"
 
-	"github.com/adrianriobo/qe-eventmanager/pkg/util/logging"
 	"github.com/spyzhov/ajson"
 )
 
@@ -24,7 +23,6 @@ func MatchFilters(event []byte, filters []string) (bool, error) {
 		if len(node) == 0 {
 			return false, fmt.Errorf("error event does not match the filters")
 		}
-		logging.Debug("Found event marching the filters")
 	}
 	return true, nil
 }

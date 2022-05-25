@@ -26,40 +26,62 @@ import (
 )
 
 const (
-	StableAPIFields                         = "stable"
-	AlphaAPIFields                          = "alpha"
-	disableHomeEnvOverwriteKey              = "disable-home-env-overwrite"
-	disableWorkingDirOverwriteKey           = "disable-working-directory-overwrite"
-	disableAffinityAssistantKey             = "disable-affinity-assistant"
-	disableCredsInitKey                     = "disable-creds-init"
-	runningInEnvWithInjectedSidecarsKey     = "running-in-environment-with-injected-sidecars"
-	requireGitSSHSecretKnownHostsKey        = "require-git-ssh-secret-known-hosts" // nolint: gosec
-	enableTektonOCIBundles                  = "enable-tekton-oci-bundles"
-	enableCustomTasks                       = "enable-custom-tasks"
-	enableAPIFields                         = "enable-api-fields"
-	DefaultDisableHomeEnvOverwrite          = true
-	DefaultDisableWorkingDirOverwrite       = true
-	DefaultDisableAffinityAssistant         = false
-	DefaultDisableCredsInit                 = false
+	// StableAPIFields is the value used for "enable-api-fields" when only stable APIs should be usable.
+	StableAPIFields = "stable"
+	// AlphaAPIFields is the value used for "enable-api-fields" when alpha APIs should be usable as well.
+	AlphaAPIFields = "alpha"
+	// FullEmbeddedStatus is the value used for "embedded-status" when the full statuses of TaskRuns and Runs should be
+	// embedded in PipelineRunStatusFields, but ChildReferences should not be used.
+	FullEmbeddedStatus = "full"
+	// BothEmbeddedStatus is the value used for "embedded-status" when full embedded statuses of TaskRuns and Runs as
+	// well as ChildReferences should be used in PipelineRunStatusFields.
+	BothEmbeddedStatus = "both"
+	// MinimalEmbeddedStatus is the value used for "embedded-status" when only ChildReferences should be used in
+	// PipelineRunStatusFields.
+	MinimalEmbeddedStatus = "minimal"
+	// DefaultDisableAffinityAssistant is the default value for "disable-affinity-assistant".
+	DefaultDisableAffinityAssistant = false
+	// DefaultDisableCredsInit is the default value for "disable-creds-init".
+	DefaultDisableCredsInit = false
+	// DefaultRunningInEnvWithInjectedSidecars is the default value for "running-in-environment-with-injected-sidecars".
 	DefaultRunningInEnvWithInjectedSidecars = true
-	DefaultRequireGitSSHSecretKnownHosts    = false
-	DefaultEnableTektonOciBundles           = false
-	DefaultEnableCustomTasks                = false
-	DefaultEnableAPIFields                  = StableAPIFields
+	// DefaultRequireGitSSHSecretKnownHosts is the default value for "require-git-ssh-secret-known-hosts".
+	DefaultRequireGitSSHSecretKnownHosts = false
+	// DefaultEnableTektonOciBundles is the default value for "enable-tekton-oci-bundles".
+	DefaultEnableTektonOciBundles = false
+	// DefaultEnableCustomTasks is the default value for "enable-custom-tasks".
+	DefaultEnableCustomTasks = false
+	// DefaultEnableAPIFields is the default value for "enable-api-fields".
+	DefaultEnableAPIFields = StableAPIFields
+	// DefaultSendCloudEventsForRuns is the default value for "send-cloudevents-for-runs".
+	DefaultSendCloudEventsForRuns = false
+	// DefaultEmbeddedStatus is the default value for "embedded-status".
+	DefaultEmbeddedStatus = FullEmbeddedStatus
+
+	disableAffinityAssistantKey         = "disable-affinity-assistant"
+	disableCredsInitKey                 = "disable-creds-init"
+	runningInEnvWithInjectedSidecarsKey = "running-in-environment-with-injected-sidecars"
+	requireGitSSHSecretKnownHostsKey    = "require-git-ssh-secret-known-hosts" // nolint: gosec
+	enableTektonOCIBundles              = "enable-tekton-oci-bundles"
+	enableCustomTasks                   = "enable-custom-tasks"
+	enableAPIFields                     = "enable-api-fields"
+	sendCloudEventsForRuns              = "send-cloudevents-for-runs"
+	embeddedStatus                      = "embedded-status"
 )
 
 // FeatureFlags holds the features configurations
 // +k8s:deepcopy-gen=true
 type FeatureFlags struct {
-	DisableHomeEnvOverwrite          bool
-	DisableWorkingDirOverwrite       bool
 	DisableAffinityAssistant         bool
 	DisableCredsInit                 bool
 	RunningInEnvWithInjectedSidecars bool
 	RequireGitSSHSecretKnownHosts    bool
 	EnableTektonOCIBundles           bool
 	EnableCustomTasks                bool
+	ScopeWhenExpressionsToTask       bool
 	EnableAPIFields                  string
+	SendCloudEventsForRuns           bool
+	EmbeddedStatus                   string
 }
 
 // GetFeatureFlagsConfigName returns the name of the configmap containing all
@@ -87,12 +109,6 @@ func NewFeatureFlagsFromMap(cfgMap map[string]string) (*FeatureFlags, error) {
 	}
 
 	tc := FeatureFlags{}
-	if err := setFeature(disableHomeEnvOverwriteKey, DefaultDisableHomeEnvOverwrite, &tc.DisableHomeEnvOverwrite); err != nil {
-		return nil, err
-	}
-	if err := setFeature(disableWorkingDirOverwriteKey, DefaultDisableWorkingDirOverwrite, &tc.DisableWorkingDirOverwrite); err != nil {
-		return nil, err
-	}
 	if err := setFeature(disableAffinityAssistantKey, DefaultDisableAffinityAssistant, &tc.DisableAffinityAssistant); err != nil {
 		return nil, err
 	}
@@ -106,6 +122,12 @@ func NewFeatureFlagsFromMap(cfgMap map[string]string) (*FeatureFlags, error) {
 		return nil, err
 	}
 	if err := setEnabledAPIFields(cfgMap, DefaultEnableAPIFields, &tc.EnableAPIFields); err != nil {
+		return nil, err
+	}
+	if err := setFeature(sendCloudEventsForRuns, DefaultSendCloudEventsForRuns, &tc.SendCloudEventsForRuns); err != nil {
+		return nil, err
+	}
+	if err := setEmbeddedStatus(cfgMap, DefaultEmbeddedStatus, &tc.EmbeddedStatus); err != nil {
 		return nil, err
 	}
 
@@ -141,6 +163,22 @@ func setEnabledAPIFields(cfgMap map[string]string, defaultValue string, feature 
 		*feature = value
 	default:
 		return fmt.Errorf("invalid value for feature flag %q: %q", enableAPIFields, value)
+	}
+	return nil
+}
+
+// setEmbeddedStatus sets the "embedded-status" flag based on the content of a given map.
+// If the feature gate is invalid or missing then an error is returned.
+func setEmbeddedStatus(cfgMap map[string]string, defaultValue string, feature *string) error {
+	value := defaultValue
+	if cfg, ok := cfgMap[embeddedStatus]; ok {
+		value = strings.ToLower(cfg)
+	}
+	switch value {
+	case FullEmbeddedStatus, BothEmbeddedStatus, MinimalEmbeddedStatus:
+		*feature = value
+	default:
+		return fmt.Errorf("invalid value for feature flag %q: %q", embeddedStatus, value)
 	}
 	return nil
 }

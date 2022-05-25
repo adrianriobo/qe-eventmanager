@@ -48,14 +48,12 @@ func CreateClient(consumerID, protocol string, brokers []string, certificateFile
 }
 
 func Send(destination string, message interface{}) error {
-	_umb.send.Lock()
-	defer _umb.send.Unlock()
 	marshalledMessage, err := json.Marshal(message)
 	if err != nil {
 		logging.Errorf("Failed to marshal data")
 		return err
 	}
-	return _umb.client.Send(destination, marshalledMessage)
+	return SendBytes(destination, marshalledMessage)
 }
 
 func SendBytes(destination string, message []byte) error {
