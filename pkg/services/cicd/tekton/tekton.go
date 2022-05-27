@@ -47,6 +47,9 @@ func CreateClient(kubeconfig []byte, namespace string,
 	// Move this to providers configuration file
 	_client.defaultDuration = v1.Duration{Duration: 8 * time.Hour}
 	_client.consoleURL = consoleURL
+	if err == nil {
+		logging.Debug("Tekton client initialized successfully")
+	}
 	return
 }
 
