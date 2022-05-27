@@ -1,7 +1,6 @@
-package rhel
+package ocp
 
 import (
-	"encoding/json"
 	"time"
 
 	"github.com/adrianriobo/qe-eventmanager/pkg/manager/events/redhat/interop"
@@ -11,11 +10,9 @@ func CreateTestComplete(dahsboardURL, xunitURL,
 	duration, resultStatus, contactName, contactEmail string,
 	artifactFromEvent []byte, systemFromEvent []byte) (*TestComplete, error) {
 	var artifact Artifact
-	if err := getNode(artifactFromEvent, artifact); err != nil {
-		return nil, err
-	}
-	var system []interop.System
-	if err := getNode(systemFromEvent, artifact); err != nil {
+	system, err := interop.AdaptEventNodes(
+		artifactFromEvent, systemFromEvent, &artifact)
+	if err != nil {
 		return nil, err
 	}
 	return &TestComplete{
@@ -41,11 +38,9 @@ func CreateTestComplete(dahsboardURL, xunitURL,
 func CreateTestError(dahsboardURL, contactName, contactEmail string,
 	artifactFromEvent, systemFromEvent []byte) (*TestError, error) {
 	var artifact Artifact
-	if err := getNode(artifactFromEvent, artifact); err != nil {
-		return nil, err
-	}
-	var system []interop.System
-	if err := getNode(systemFromEvent, artifact); err != nil {
+	system, err := interop.AdaptEventNodes(
+		artifactFromEvent, systemFromEvent, &artifact)
+	if err != nil {
 		return nil, err
 	}
 	return &TestError{
@@ -66,13 +61,4 @@ func CreateTestError(dahsboardURL, contactName, contactEmail string,
 			Category:  "interoperability",
 			Namespace: "interop",
 			TestType:  "product-scenario"}}, nil
-}
-
-// func getArtifact(source []byte) (target Artifact, err error) {
-// 	err = json.Unmarshal(source, &target)
-// 	return
-// }
-
-func getNode(source []byte, target interface{}) error {
-	return json.Unmarshal(source, &target)
 }
