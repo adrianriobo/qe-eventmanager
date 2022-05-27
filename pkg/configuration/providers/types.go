@@ -3,6 +3,7 @@ package providers
 type Providers struct {
 	UMB    UMB    `yaml:"umb,omitempty"`
 	Tekton Tekton `yaml:"tekton,omitempty"`
+	Github Github `yaml:"github,omitempty"`
 }
 
 type UMB struct {
@@ -24,4 +25,8 @@ type Tekton struct {
 type Workspace struct {
 	Name string `yaml:"name"`
 	PVC  string `yaml:"pvc"`
+}
+
+type Github struct {
+	Token string `yaml:"token"`
 }
