@@ -39,9 +39,7 @@ func (u umbFlow) Handle(event []byte) error {
 
 func (u umbFlow) Match(event []byte) error {
 	var filters []string
-	for _, filter := range u.filters {
-		filters = append(filters, filter)
-	}
+	filters = append(filters, u.filters...)
 	match, err := json.MatchFilters(event, filters)
 	if err != nil {
 		logging.Errorf("Error checking filters for event %v", err)
@@ -49,6 +47,6 @@ func (u umbFlow) Match(event []byte) error {
 	if !match {
 		return fmt.Errorf("filters do not match, message will not be processed")
 	}
-	logging.Debug("Found event marching the filters for flow %s", u.flowName)
+	logging.Debugf("Found event marching the filters for flow %s", u.flowName)
 	return nil
 }
