@@ -16,6 +16,7 @@ import (
 	inputsUMB "github.com/adrianriobo/qe-eventmanager/pkg/manager/flows/inputs/umb"
 	tektonClient "github.com/adrianriobo/qe-eventmanager/pkg/services/cicd/tekton"
 	"github.com/adrianriobo/qe-eventmanager/pkg/services/messaging/umb"
+	"github.com/adrianriobo/qe-eventmanager/pkg/services/scm/github"
 	"github.com/adrianriobo/qe-eventmanager/pkg/util"
 	"github.com/adrianriobo/qe-eventmanager/pkg/util/file"
 	"github.com/adrianriobo/qe-eventmanager/pkg/util/logging"
@@ -24,14 +25,10 @@ import (
 func Initialize(providersFilePath string, flowsFilePath []string) {
 	providers, flows, err := loadFiles(providersFilePath, flowsFilePath)
 	if err != nil {
-		logging.Errorf("%v", err)
+		logging.Errorf("error loading configuration files: %v", err)
 		os.Exit(1)
 	}
-	if err := createTektonClient(providers.Tekton); err != nil {
-		logging.Error(err)
-		os.Exit(1)
-	}
-	if err := createUMBClient(providers.UMB); err != nil {
+	if err = initializeClients(*providers); err != nil {
 		logging.Error(err)
 		os.Exit(1)
 	}
@@ -83,6 +80,29 @@ func loadFiles(providersFilePath string, flowsFilePath []string) (*providers.Pro
 		}
 	}
 	return structuredProviders, &structuredFlows, nil
+}
+
+func initializeClients(info providers.Providers) error {
+	var err error
+	if !util.IsEmpty(info.Tekton) {
+		err = createTektonClient(info.Tekton)
+	}
+	if err != nil {
+		return fmt.Errorf("error creating tekton client: %v", err)
+	}
+	if !util.IsEmpty(info.UMB) {
+		err = createUMBClient(info.UMB)
+	}
+	if err != nil {
+		return fmt.Errorf("error creating UMB client: %v", err)
+	}
+	if !util.IsEmpty(info.Github) {
+		err = github.CreateClient(info.Github.Token)
+	}
+	if err != nil {
+		return fmt.Errorf("error creating Github client: %v", err)
+	}
+	return nil
 }
 
 func createTektonClient(info providers.Tekton) (err error) {
