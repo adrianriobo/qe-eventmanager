@@ -28,5 +28,8 @@ type Workspace struct {
 }
 
 type Github struct {
-	Token string `yaml:"token"`
+	Token             string `yaml:"token,omitempty"`
+	AppID             string `yaml:"appID,omitempty"`
+	AppInstallationID string `yaml:"appInstallationID,omitempty"`
+	AppKey            string `yaml:"appKey,omitempty"`
 }
