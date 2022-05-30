@@ -97,7 +97,7 @@ func initializeClients(info providers.Providers) error {
 		return fmt.Errorf("error creating UMB client: %v", err)
 	}
 	if !util.IsEmpty(info.Github) {
-		err = github.CreateClient(info.Github.Token)
+		err = createGithubClient(info.Github)
 	}
 	if err != nil {
 		return fmt.Errorf("error creating Github client: %v", err)
@@ -138,6 +138,17 @@ func createUMBClient(info providers.UMB) (err error) {
 		userKey,
 		certificateAuthority)
 	return
+}
+
+func createGithubClient(info providers.Github) error {
+	if len(info.AppKey) > 0 {
+		appKey, err := providers.ParseGithubFiles(info)
+		if err != nil {
+			return err
+		}
+		return github.CreateClientForApp(info.AppID, info.AppInstallationID, appKey)
+	}
+	return github.CreateClientForUser(info.Token)
 }
 
 // For each flow defined:
