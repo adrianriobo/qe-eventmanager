@@ -8,6 +8,11 @@ import (
 	"golang.org/x/oauth2"
 )
 
+var (
+	tektonAvatar            string = "https://avatars.githubusercontent.com/u/48335577?v=4"
+	commitStatusDescription string = "Tested on downstream infrastructure"
+)
+
 var _client *github.Client
 
 func CreateClient(token string) error {
@@ -25,10 +30,17 @@ func CreateClient(token string) error {
 	return nil
 }
 
-func test(owner string, repo string, ref int) error {
-	// for PR need action synchronize or opened
-	// repoStatus := &github.RepoStatus{}
-	// repoStatus, _, err := _client.Repositories.CreateStatus(context.Background(), owner, repo, ref, repoStatus)
-	// _client.Checks.CreateCheckRun()
+func CommitStatus(state, owner, repo, ref, dashboardURL string) error {
+	status, response, err := _client.Repositories.CreateStatus(context.Background(),
+		owner, repo, ref, &github.RepoStatus{
+			State:       &state,
+			Description: &commitStatusDescription,
+			AvatarURL:   &tektonAvatar,
+			TargetURL:   &dashboardURL})
+	if err != nil {
+		return err
+	}
+	logging.Debugf("status is %v", status)
+	logging.Debugf("response is %v", response)
 	return nil
 }

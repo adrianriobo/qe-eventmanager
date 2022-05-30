@@ -36,8 +36,21 @@ const event = `
 	}]
 }`
 
+const simpleEvent = `
+{
+	"action": "synchronize",
+	"number": 3179
+}`
+
 func TestMatching(t *testing.T) {
 	match, err := MatchFilters([]byte(event), []string{"$.artifact.products[?(@.nvr=='found')].nvr"})
+	if !match || err != nil {
+		t.Fatal("Expression should match")
+	}
+}
+
+func TestMatchingSimple(t *testing.T) {
+	match, err := MatchFilters([]byte(simpleEvent), []string{"$[?($.action == 'synchronize' || $.action == 'opened')]"})
 	if !match || err != nil {
 		t.Fatal("Expression should match")
 	}
