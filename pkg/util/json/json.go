@@ -32,6 +32,13 @@ func GetStringValue(event []byte, jsonPath string) (string, error) {
 	if err != nil {
 		return "", err
 	}
+	if node.IsNumeric() {
+		value, err := node.GetNumeric()
+		if err != nil {
+			return "", fmt.Errorf("error with %v", err)
+		}
+		return fmt.Sprintf("%f", value), nil
+	}
 	if value, err := node.GetString(); err != nil {
 		return "", fmt.Errorf("error with %v", err)
 	} else {

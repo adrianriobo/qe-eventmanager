@@ -5,6 +5,7 @@ import (
 	"strings"
 
 	"github.com/adrianriobo/qe-eventmanager/pkg/manager/flows"
+	"github.com/adrianriobo/qe-eventmanager/pkg/manager/flows/results"
 	tektonClient "github.com/adrianriobo/qe-eventmanager/pkg/services/cicd/tekton"
 	"github.com/adrianriobo/qe-eventmanager/pkg/util/json"
 	"github.com/adrianriobo/qe-eventmanager/pkg/util/logging"
@@ -44,7 +45,7 @@ func (a TektonAction) Run(event []byte) error {
 	defer close(informerStopper)
 	logging.Debugf("Added informer for pipelinerun %s", pipelineRun.GetName())
 	go tektonClient.AddInformer(pipelineRun.GetName(), status, informerStopper)
-	return manageResults(<-status, pipelineRun.GetName(),
+	return results.ManageResults(<-status, pipelineRun.GetName(),
 		event, a.actionInfo.Success, a.actionInfo.Error)
 }
 

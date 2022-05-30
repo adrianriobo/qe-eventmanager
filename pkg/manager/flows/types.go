@@ -37,15 +37,28 @@ type NameValuePair struct {
 }
 
 type Success struct {
-	UMB UMBEvent `yaml:"umb"`
+	UMB    UMBEvent `yaml:"umb,omitempty"`
+	Github Github   `yaml:"github,omitempty"`
 }
 
 type Error struct {
-	UMB UMBEvent `yaml:"umb"`
+	UMB    UMBEvent `yaml:"umb,omitempty"`
+	Github Github   `yaml:"github,omitempty"`
 }
 
 type UMBEvent struct {
 	Topic       string          `yaml:"topic"`
 	EventSchema string          `yaml:"eventSchema"`
 	EventFields []NameValuePair `yaml:"eventFields"`
+}
+
+type Github struct {
+	CommitStatus GithubCommitStatus `yaml:"commitStatus,omitempty"`
+}
+
+type GithubCommitStatus struct {
+	Owner  string `yaml:"owner"`
+	Repo   string `yaml:"repo"`
+	Commit string `yaml:"commit"`
+	Status string `yaml:"status"`
 }

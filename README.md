@@ -1,5 +1,7 @@
 # qe-eventmanager
 
+![avatar](docs/diagrams/eventmanager.svg)
+
 Sample app for handling qe events
 
 [![Container Repository on Quay](https://quay.io/repository/ariobolo/qe-eventmanager/status "Container Repository on Quay")](https://quay.io/repository/ariobolo/qe-eventmanager)
@@ -61,6 +63,8 @@ tekton:
     pvc: pvc2
   kubeconfig: XXXXXX # encoded as base64. This value is optional is used to connect to remote cluster
                      # Otherwise eventmanager can rely on RBAC when running inside the cluster
+github:
+  token: github_pat_token
 ```
 
 ### Flows  
