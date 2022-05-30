@@ -36,3 +36,7 @@ func ParseUMBFiles(source UMB) (userCertificate, userKey, certificateAuthority [
 	}
 	return
 }
+
+func ParseGithubFiles(source Github) (appKey []byte, err error) {
+	return base64.StdEncoding.DecodeString(source.AppKey)
+}
