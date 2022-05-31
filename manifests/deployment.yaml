@@ -2,56 +2,42 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: qe-eventmanager
+  name: manager
   labels:
-    app: qe-eventmanager
+    app: manager
 spec:
   replicas: 1
   selector:
     matchLabels:
-      app: qe-eventmanager
+      app: manager
   template:
     metadata:
       labels:
-        app: qe-eventmanager
+        app: manager
     spec:
       containers:
-      - name: qe-eventmanager
-        image: quay.io/ariobolo/qe-eventmanager:0.0.1
+      - name: manager
+        image: quay.io/ariobolo/qe-eventmanager:${VERSION}
         env:
-        - name: BROKERS
-          valueFrom:
-            secretKeyRef:
-              name: qe-eventmanager-config
-              key: brokers
-        - name: CONSUMER_ID
-          valueFrom:
-            secretKeyRef:
-              name: qe-eventmanager-config
-              key: consumerid
-        - name: DRIVER
-          valueFrom:
-            secretKeyRef:
-              name: qe-eventmanager-config
-              key: driver
-        - name: CA   
-          value: /etc/qe-eventmanager/ca.crt
-        - name: CERTIFICATE   
-          value: /etc/qe-eventmanager/sa.crt
-        - name: KEY   
-          value: /etc/qe-eventmanager/sa.key
+        - name: PROVIDERS_FILE_PATH   
+          value: /etc/eventmanager/providers.yaml
+        - name: FLOWS_FILE_PATH   
+          value: /etc/eventmanager/flow1.yaml,/etc/eventmanager/flow2.yaml
         volumeMounts:
-        - mountPath: /etc/qe-eventmanager/
-          name: qe-eventmanager-config
-      serviceAccountName: qe-eventmanager
+        - name: providers 
+          mountPath: /etc/eventmanager/providers.yaml
+          subPath: providers.yaml
+        - name: flows 
+          mountPath: /etc/eventmanager/flow1.yaml
+          subPath: flow1.yaml
+        - name: flows 
+          mountPath: /etc/eventmanager/flow2.yaml
+          subPath: flow2.yaml
+      serviceAccountName: eventmanager
       volumes:
-      - name: qe-eventmanager-config
+      - name: providers
         secret:
-          secretName: qe-eventmanager-config
-          items:
-          - key: ca
-            path: ca.crt
-          - key: certificate
-            path: sa.crt
-          - key: key
-            path: sa.key
+          secretName: eventmanager-providers
+      - name: flows
+        configMap:
+          name: eventmanager-flows
