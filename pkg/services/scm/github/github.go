@@ -13,8 +13,8 @@ import (
 )
 
 var (
-	commitStatusDescription string = "Tested on downstream infrastructure"
-	commitStatusContext     string = "qe-eventmanager"
+	defaultStatusDescription string = "Tested on downstream infrastructure"
+	defaultStatusContext     string = "qe-eventmanager"
 )
 
 var _client *github.Client
@@ -35,7 +35,6 @@ func CreateClientForUser(pat string) error {
 }
 
 func CreateClientForApp(appID, appInstallationID string, appKey []byte) error {
-	// Shared transport to reuse TCP connections.
 	tr := http.DefaultTransport
 	appIDAsInt, err := strconv.ParseInt(appID, 10, 64)
 	if err != nil {
@@ -59,17 +58,22 @@ func CreateClientForApp(appID, appInstallationID string, appKey []byte) error {
 	return nil
 }
 
-func CommitStatus(state, owner, repo, ref, dashboardURL string) error {
-	status, response, err := _client.Repositories.CreateStatus(context.Background(),
+func RepositoryStatus(state, owner, repo, ref, targetURL, statusContext, description string) error {
+	if len(statusContext) == 0 {
+		statusContext = defaultStatusContext
+	}
+	if len(description) == 0 {
+		description = defaultStatusDescription
+	}
+	status, _, err := _client.Repositories.CreateStatus(context.Background(),
 		owner, repo, ref, &github.RepoStatus{
 			State:       &state,
-			Description: &commitStatusDescription,
-			TargetURL:   &dashboardURL,
-			Context:     &commitStatusContext})
+			Description: &description,
+			TargetURL:   &targetURL,
+			Context:     &statusContext})
 	if err != nil {
 		return err
 	}
 	logging.Debugf("status is %v", status)
-	logging.Debugf("response is %v", response)
 	return nil
 }

@@ -53,7 +53,7 @@ type UMBEvent struct {
 }
 
 type Github struct {
-	CommitStatus GithubCommitStatus `yaml:"commitStatus,omitempty"`
+	Status GithubCommitStatus `yaml:"status,omitempty"`
 }
 
 type GithubCommitStatus struct {
