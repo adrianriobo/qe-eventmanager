@@ -93,13 +93,13 @@ func manageErrorUMB(status *v1beta1.PipelineRunStatus, pipelineRunName string,
 
 func manageResultGithub(status *v1beta1.PipelineRunStatus, pipelineRunName string,
 	event []byte, githubInfo flows.Github) error {
-	if !util.IsEmpty(githubInfo.CommitStatus) {
-		return github.CommitStatus(
-			getEventFieldValueByExpression(githubInfo.CommitStatus.Status, status, event),
-			getEventFieldValueByExpression(githubInfo.CommitStatus.Owner, status, event),
-			getEventFieldValueByExpression(githubInfo.CommitStatus.Repo, status, event),
-			getEventFieldValueByExpression(githubInfo.CommitStatus.Commit, status, event),
-			tektonClient.GetPipelinerunDashboardUrl(pipelineRunName))
+	if !util.IsEmpty(githubInfo.Status) {
+		return github.RepositoryStatus(
+			getEventFieldValueByExpression(githubInfo.Status.Status, status, event),
+			getEventFieldValueByExpression(githubInfo.Status.Owner, status, event),
+			getEventFieldValueByExpression(githubInfo.Status.Repo, status, event),
+			getEventFieldValueByExpression(githubInfo.Status.Commit, status, event),
+			tektonClient.GetPipelinerunDashboardUrl(pipelineRunName), "", "")
 	}
 	return nil
 }
