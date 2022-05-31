@@ -1,0 +1,31 @@
+name: gh-flow
+input: 
+  umb: 
+    topic: topic1
+    filters:
+    - $.pull_request
+    - $[?($.action == 'synchronize' || $.action == 'opened')]
+action:
+  tektonPipeline:
+    name: sample-pipeline
+    params:
+    - name: param1
+      value: $.pull_request.number
+    - name: param2
+      value: $.pull_request.head.sha
+    - name: desired-result-state
+      value: success
+    success:
+      github:
+        status:
+          commit: $.pull_request.head.sha
+          owner: sample
+          repo: sample
+          status: success
+    error:
+      github:
+        status:
+          commit: $.pull_request.head.sha
+          owner: sample
+          repo: sample
+          status: error

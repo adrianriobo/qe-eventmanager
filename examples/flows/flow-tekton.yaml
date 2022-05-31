@@ -1,0 +1,35 @@
+name: tekton-flow
+input: 
+  umb: 
+    topic: topic1
+    filters:
+    - $.artifact.products[?(@.name=='value1')].name
+    - $.artifact.products[?(@.name=='value2')].name
+action:
+  tektonPipeline:
+    name: sample-pipeline
+    params:
+    - name: param1
+      value: $.artifact.products[?(@.name=='value1')].image
+    - name: param2
+      value: $.artifact.products[?(@.name=='value2')].repos[?(@.name=='foo')].base_url
+    - name: desired-result-state
+      value: error
+    success:
+      umb:
+        topic: topic-s
+        eventSchema: schema1
+        eventFields:
+        - name: field1
+          value: $(pipeline.results.result1)
+        - name: field2
+          value: fixed
+    error:
+      umb:
+        topic: topic-e
+        eventSchema: schema2
+        eventFields:
+        - name: field1
+          value: fixed
+        - name: field2
+          value: fixed

@@ -1,0 +1,50 @@
+---
+apiVersion: tekton.dev/v1beta1
+kind: Task
+metadata:
+  name: umb-sende
+  labels:
+    app.kubernetes.io/version: "0.1"
+    dev.lifecycle.io/phase: data
+  annotations:
+    tekton.dev/pipelines.minVersion: "0.24.x"
+    tekton.dev/categories: common
+    tekton.dev/tags: data, message
+    tekton.dev/displayName: "data message sender"
+    tekton.dev/platforms: "linux/amd64"
+spec:
+  description: >-
+    This task will send a json message to umb
+
+  params: 
+  - name: umb-provider-secret
+    description: secret holding the umb provider config
+  - name: topic
+    description: detination topic to send the message
+  # depending on the size of the message may need to use workspaces
+  - name: message
+    description: json message to send 
+
+  steps:
+  - name: umb-send
+    image: quay.io/ariobolo/qe-eventmanager:0.0.3
+    script: |
+      #!/bin/bash 
+      # Added verbosity
+      set -xuo
+
+      cat $(params.message) > /tmp/message.json
+      qe-eventmanager umb send \
+                      -p /etc/eventmanager/providers.yaml \
+                      -d $(params.topic) \
+                      -m /tmp/message.json
+      exit $?                   
+    resources:      
+      requests:
+        memory: "50Mi"
+        cpu: "5m"
+      limits:
+        memory: "70Mi"
+        cpu: "10m"
+
+      
