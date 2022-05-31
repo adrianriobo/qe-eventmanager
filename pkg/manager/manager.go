@@ -8,12 +8,11 @@ import (
 	"strings"
 	"syscall"
 
+	"github.com/adrianriobo/qe-eventmanager/pkg/configuration/flows"
 	"github.com/adrianriobo/qe-eventmanager/pkg/configuration/providers"
-	"github.com/adrianriobo/qe-eventmanager/pkg/manager/flows"
 	"github.com/adrianriobo/qe-eventmanager/pkg/manager/flows/actions"
-	actionForward "github.com/adrianriobo/qe-eventmanager/pkg/manager/flows/actions/forward"
-	actionTekton "github.com/adrianriobo/qe-eventmanager/pkg/manager/flows/actions/tekton"
-	inputsUMB "github.com/adrianriobo/qe-eventmanager/pkg/manager/flows/inputs/umb"
+	"github.com/adrianriobo/qe-eventmanager/pkg/manager/flows/inputs"
+
 	tektonClient "github.com/adrianriobo/qe-eventmanager/pkg/services/cicd/tekton"
 	"github.com/adrianriobo/qe-eventmanager/pkg/services/messaging/umb"
 	"github.com/adrianriobo/qe-eventmanager/pkg/services/scm/github"
@@ -157,46 +156,17 @@ func manageFlows(flows *[]flows.Flow) error {
 	if len(*flows) > 0 {
 		for _, flow := range *flows {
 			logging.Debugf("Setting up flow: %v", flow)
-			action, err := getAction(flow)
+			action, err := actions.CreateAction(flow)
 			if err != nil {
 				logging.Errorf("Find error with flow %s:%v", flow.Name, err)
 				break
 			}
-			err = addActionToInput(flow, action)
+			err = inputs.AddActionToInput(flow, action)
 			if err != nil {
 				logging.Errorf("Find error with flow %s:%v", flow.Name, err)
 				break
 			}
 		}
-	}
-	return nil
-}
-
-func getAction(flow flows.Flow) (actions.Runnable, error) {
-	// if flow.Action.TektonPipelineAction != nil {
-	if !util.IsEmpty(flow.Action.TektonPipeline) {
-		//Create the action
-		action, err := actionTekton.Create(flow.Action.TektonPipeline)
-		if err != nil {
-			return nil, err
-		}
-		return action, nil
-	}
-	if !util.IsEmpty(flow.Action.Forward) {
-		//Create the action
-		action, err := actionForward.Create(flow.Action.Forward)
-		if err != nil {
-			return nil, err
-		}
-		return action, nil
-	}
-	return nil, fmt.Errorf("action is invalid")
-}
-
-func addActionToInput(flow flows.Flow, action actions.Runnable) error {
-	// if flow.Input.UmbInput != nil {
-	if !util.IsEmpty(flow.Input.UMB) {
-		return inputsUMB.Add(flow.Name, flow.Input.UMB, action)
 	}
 	return nil
 }

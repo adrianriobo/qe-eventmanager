@@ -1,7 +1,7 @@
 package forward
 
 import (
-	"github.com/adrianriobo/qe-eventmanager/pkg/manager/flows"
+	"github.com/adrianriobo/qe-eventmanager/pkg/configuration/flows"
 	"github.com/adrianriobo/qe-eventmanager/pkg/util/logging"
 )
 

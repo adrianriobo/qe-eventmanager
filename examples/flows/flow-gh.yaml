@@ -5,6 +5,13 @@ input:
     filters:
     - $.pull_request
     - $[?($.action == 'synchronize' || $.action == 'opened')]
+  ack:
+    github:
+      status:
+        ref: $.node1.node2.sha
+        owner: sample-owner
+        repo: sample-repo # Configured github providers require rights on this repo
+        status: pending
 action:
   tektonPipeline:
     name: sample-pipeline
@@ -18,14 +25,14 @@ action:
     success:
       github:
         status:
-          commit: $.pull_request.head.sha
+          ref: $.pull_request.head.sha
           owner: sample
           repo: sample
           status: success
     error:
       github:
         status:
-          commit: $.pull_request.head.sha
+          ref: $.pull_request.head.sha
           owner: sample
           repo: sample
           status: error

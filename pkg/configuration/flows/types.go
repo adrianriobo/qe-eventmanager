@@ -8,11 +8,16 @@ type Flow struct {
 
 type Input struct {
 	UMB UMBInput `yaml:"umb,omitempty"`
+	ACK ACK      `yaml:"ack,omitempty"`
 }
 
 type UMBInput struct {
 	Topic   string   `yaml:"topic"`
 	Filters []string `yaml:"filters"`
+}
+
+type ACK struct {
+	Github Github `yaml:"github,omitempty"`
 }
 
 type Action struct {
@@ -59,6 +64,6 @@ type Github struct {
 type GithubCommitStatus struct {
 	Owner  string `yaml:"owner"`
 	Repo   string `yaml:"repo"`
-	Commit string `yaml:"commit"`
+	Ref    string `yaml:"ref"`
 	Status string `yaml:"status"`
 }

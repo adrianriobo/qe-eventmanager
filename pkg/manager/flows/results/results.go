@@ -3,8 +3,8 @@ package results
 import (
 	"strings"
 
+	"github.com/adrianriobo/qe-eventmanager/pkg/configuration/flows"
 	"github.com/adrianriobo/qe-eventmanager/pkg/manager/events"
-	"github.com/adrianriobo/qe-eventmanager/pkg/manager/flows"
 	tektonClient "github.com/adrianriobo/qe-eventmanager/pkg/services/cicd/tekton"
 	"github.com/adrianriobo/qe-eventmanager/pkg/services/messaging/umb"
 	"github.com/adrianriobo/qe-eventmanager/pkg/services/scm/github"
@@ -98,7 +98,7 @@ func manageResultGithub(status *v1beta1.PipelineRunStatus, pipelineRunName strin
 			getEventFieldValueByExpression(githubInfo.Status.Status, status, event),
 			getEventFieldValueByExpression(githubInfo.Status.Owner, status, event),
 			getEventFieldValueByExpression(githubInfo.Status.Repo, status, event),
-			getEventFieldValueByExpression(githubInfo.Status.Commit, status, event),
+			getEventFieldValueByExpression(githubInfo.Status.Ref, status, event),
 			tektonClient.GetPipelinerunDashboardUrl(pipelineRunName), "", "")
 	}
 	return nil

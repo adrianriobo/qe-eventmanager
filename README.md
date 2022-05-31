@@ -84,6 +84,13 @@ input:
     filters:
       - $.node1.node2[?(@.field1=='value1')].field1
       - $.node1.node2[?(@.field2=='value2')].field1
+  ack:
+    github:
+      status:
+        ref: $.node1.node2.sha
+        owner: sample-owner
+        repo: sample-repo # Configured github providers require rights on this repo
+        status: pending
 action:
   tektonPipeline:
     name: XXX
@@ -104,7 +111,7 @@ action:
   error:
     github:
       status:
-        commit: $.node1.node2.sha
+        ref: $.node1.node2.sha
         owner: sample-owner
         repo: sample-repo # Configured github providers require rights on this repo
         status: error

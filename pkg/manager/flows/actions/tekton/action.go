@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/adrianriobo/qe-eventmanager/pkg/manager/flows"
+	"github.com/adrianriobo/qe-eventmanager/pkg/configuration/flows"
 	"github.com/adrianriobo/qe-eventmanager/pkg/manager/flows/results"
 	tektonClient "github.com/adrianriobo/qe-eventmanager/pkg/services/cicd/tekton"
 	"github.com/adrianriobo/qe-eventmanager/pkg/util/json"
@@ -38,7 +38,7 @@ func (a TektonAction) Run(event []byte) error {
 	if err != nil {
 		return err
 	}
-	logging.Debugf("Created pipelinerun : %v", pipelineRun)
+	logging.Debugf("Created pipelinerun %s with params %v", pipelineRun.GetName(), pipelineRunParameters)
 	status := make(chan *v1beta1.PipelineRunStatus)
 	informerStopper := make(chan struct{})
 	defer close(status)
