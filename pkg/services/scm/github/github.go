@@ -65,7 +65,7 @@ func RepositoryStatus(state, owner, repo, ref, targetURL, statusContext, descrip
 	if len(description) == 0 {
 		description = defaultStatusDescription
 	}
-	status, _, err := _client.Repositories.CreateStatus(context.Background(),
+	_, _, err := _client.Repositories.CreateStatus(context.Background(),
 		owner, repo, ref, &github.RepoStatus{
 			State:       &state,
 			Description: &description,
@@ -74,6 +74,6 @@ func RepositoryStatus(state, owner, repo, ref, targetURL, statusContext, descrip
 	if err != nil {
 		return err
 	}
-	logging.Debugf("status is %v", status)
+	logging.Debugf("Sending repository status with state %s to repo %s and ref %s", state, repo, ref)
 	return nil
 }
