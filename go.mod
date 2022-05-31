@@ -21,7 +21,7 @@ require (
 )
 
 require (
-	github.com/bradleyfalzon/ghinstallation/v2 v2.0.4 // indirect
+	github.com/bradleyfalzon/ghinstallation/v2 v2.0.4
 	github.com/golang-jwt/jwt/v4 v4.3.0 // indirect
 	github.com/google/go-github/v41 v41.0.0 // indirect
 )
