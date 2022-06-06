@@ -6,15 +6,15 @@ import (
 	"github.com/adrianriobo/qe-eventmanager/pkg/configuration/flows"
 	"github.com/adrianriobo/qe-eventmanager/pkg/manager/flows/actions"
 	"github.com/adrianriobo/qe-eventmanager/pkg/manager/flows/inputs/ack"
-	inputACK "github.com/adrianriobo/qe-eventmanager/pkg/manager/flows/inputs/ack"
 	"github.com/adrianriobo/qe-eventmanager/pkg/services/messaging/umb"
 	"github.com/adrianriobo/qe-eventmanager/pkg/services/messaging/umb/api"
 	"github.com/adrianriobo/qe-eventmanager/pkg/util/json"
 	"github.com/adrianriobo/qe-eventmanager/pkg/util/logging"
 )
 
-func Add(flowName string, input flows.UMBInput, ack inputACK.ACK, action actions.Runnable) error {
+func Add(flowName string, input flows.UMBInput, ack ack.ACK, action actions.Runnable) error {
 	if err := umb.Subscribe(
+		flowName,
 		input.Topic,
 		[]api.MessageHandler{new(flowName, input.Filters, ack, action)}); err != nil {
 		return err
