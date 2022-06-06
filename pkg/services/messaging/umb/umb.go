@@ -63,11 +63,11 @@ func SendBytes(destination string, message []byte) error {
 	return _umb.client.Send(destination, message)
 }
 
-func Subscribe(topic string, handlers []api.MessageHandler) error {
+func Subscribe(subscriptionID, topic string, handlers []api.MessageHandler) error {
 	_umb.subscribe.Lock()
 	defer _umb.subscribe.Unlock()
-	logging.Infof("Adding a subscription to %s", topic)
-	internalSubscription, err := _umb.client.Subscribe(umbTopic(topic), handlers)
+	logging.Infof("Adding a subscription %s on topic %s", subscriptionID, topic)
+	internalSubscription, err := _umb.client.Subscribe(umbTopic(subscriptionID, topic), handlers)
 	if err != nil {
 		return err
 	}
@@ -137,10 +137,11 @@ func handle(msg []byte, handler api.MessageHandler) {
 // Umb uses identified consumer queues acting as (virtual) topics
 // for subscriptions, the full queue name is based on the pattern:
 // "Consumer.$SERVICE_ACCOUNT_NAME.$SUBSCRIPTION_ID.VirtualTopic.>"
-func umbTopic(topic string) string {
-	subscriptionId := strings.Split(topic, ".")
-	return fmt.Sprintf("Consumer.%s.%s.%s",
+func umbTopic(subscriptionID, topic string) string {
+	topicCrumbs := strings.Split(topic, ".")
+	return fmt.Sprintf("Consumer.%s.%s-%s.%s",
 		_umb.consumerID,
-		subscriptionId[len(subscriptionId)-1],
+		subscriptionID,
+		topicCrumbs[len(topicCrumbs)-1],
 		topic)
 }
