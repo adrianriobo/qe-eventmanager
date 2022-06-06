@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"time"
 
+	"github.com/adrianriobo/qe-eventmanager/pkg/util"
 	"github.com/adrianriobo/qe-eventmanager/pkg/util/logging"
 	v1beta1 "github.com/tektoncd/pipeline/pkg/apis/pipeline/v1beta1"
 	clientset "github.com/tektoncd/pipeline/pkg/client/clientset/versioned"
@@ -67,6 +68,8 @@ func ApplyPipelinerun(spec *v1beta1.PipelineRun) (*v1beta1.PipelineRun, error) {
 		return nil, err
 	}
 	spec.ObjectMeta.Namespace = _client.namespace
+	spec.Spec.Workspaces = _client.workspaces
+	spec.Spec.Timeout = &_client.defaultDuration
 	return _client.clientset.TektonV1beta1().
 		PipelineRuns(_client.namespace).
 		Create(context.Background(), spec, v1.CreateOptions{})
@@ -107,6 +110,9 @@ func AddInformer(pipelinerunName string, status chan *v1beta1.PipelineRunStatus,
 }
 
 func notifyStatus(pipelineRun *v1beta1.PipelineRun) bool {
+	if util.IsEmpty(pipelineRun.Status) {
+		return false
+	}
 	condition := pipelineRun.Status.GetCondition(apis.ConditionSucceeded)
 	return (condition.Reason == string(v1beta1.PipelineRunReasonSuccessful) && waitForResults(pipelineRun)) ||
 		condition.Reason == string(v1beta1.PipelineRunReasonFailed)
