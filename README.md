@@ -41,7 +41,7 @@ As a manager integrate providers based on flow definitnions:
 
 A simple overview on an umb-tekton integration
 
-![Overview](docs/diagrams/overview.jpg?raw=true)
+![Overview](docs/diagrams/highlevel-arch.jpg?raw=true)
 
 ## Configuration
 
