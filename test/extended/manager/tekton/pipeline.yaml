@@ -59,7 +59,7 @@ spec:
         script: |
           #!/bin/sh
           # Add some delay to test manual cancellation 
-          # sleep 60
+          sleep 30
           echo -n "$(params.param1)" | tee $(results.result1.path)
           echo -n "$(params.param2)" | tee $(results.result2.path)    
           if [[ $(params.desired-result-state) == "success" ]]; then
