@@ -6,6 +6,8 @@ import (
 	"reflect"
 	"strconv"
 	"time"
+
+	"golang.org/x/exp/slices"
 )
 
 func EnsureBaseDirectoriesExist(path string) error {
@@ -31,4 +33,26 @@ func IsEmpty(source interface{}) bool {
 		}
 	}
 	return len(nonEmptyValues) == 0
+}
+
+func SliceContains[T comparable](sourceSlice []T, item T) bool {
+	idx := slices.IndexFunc(sourceSlice,
+		func(e T) bool { return e == item })
+	return idx != -1
+}
+
+func SliceItem[T any](sourceSlice []T, item T,
+	contains func(e T) bool,
+	value func(e T) T) (bool, T) {
+	idx := slices.IndexFunc(sourceSlice,
+		func(e T) bool { return contains(e) })
+	if idx == -1 {
+		return false, getZero[T]()
+	}
+	return true, value(sourceSlice[idx])
+}
+
+func getZero[T any]() T {
+	var result T
+	return result
 }
