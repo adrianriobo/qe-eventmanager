@@ -7,6 +7,7 @@ import (
 
 	"github.com/adrianriobo/qe-eventmanager/pkg/util"
 	"github.com/adrianriobo/qe-eventmanager/pkg/util/logging"
+	utilTekton "github.com/adrianriobo/qe-eventmanager/pkg/util/tekton"
 	v1beta1 "github.com/tektoncd/pipeline/pkg/apis/pipeline/v1beta1"
 	clientset "github.com/tektoncd/pipeline/pkg/client/clientset/versioned"
 	informers "github.com/tektoncd/pipeline/pkg/client/informers/externalversions"
@@ -15,7 +16,6 @@ import (
 	"k8s.io/client-go/rest"
 	"k8s.io/client-go/tools/cache"
 	"k8s.io/client-go/tools/clientcmd"
-	"knative.dev/pkg/apis"
 )
 
 type tektonClient struct {
@@ -113,14 +113,8 @@ func notifyStatus(pipelineRun *v1beta1.PipelineRun) bool {
 	if util.IsEmpty(pipelineRun.Status) {
 		return false
 	}
-	condition := pipelineRun.Status.GetCondition(apis.ConditionSucceeded)
-	return (util.SliceContains([]string{
-		string(v1beta1.PipelineRunReasonSuccessful),
-		string(v1beta1.PipelineRunReasonCompleted)}, condition.Reason) && waitForResults(pipelineRun)) ||
-		util.SliceContains([]string{
-			string(v1beta1.PipelineRunReasonFailed),
-			string(v1beta1.PipelineRunReasonCancelled),
-			string(v1beta1.PipelineRunReasonTimedOut)}, condition.Reason)
+	return (utilTekton.IsSuccessful(&pipelineRun.Status) && waitForResults(pipelineRun)) ||
+		utilTekton.IsFailed(&pipelineRun.Status)
 }
 
 func waitForResults(pipelineRun *v1beta1.PipelineRun) bool {

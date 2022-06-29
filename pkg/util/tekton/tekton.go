@@ -1,6 +1,7 @@
 package tekton
 
 import (
+	"github.com/adrianriobo/qe-eventmanager/pkg/util"
 	"github.com/adrianriobo/qe-eventmanager/pkg/util/http"
 	"github.com/adrianriobo/qe-eventmanager/pkg/util/logging"
 	"github.com/adrianriobo/qe-eventmanager/pkg/util/xunit"
@@ -11,6 +12,14 @@ import (
 const (
 	resultStatusPassed string = "passed"
 	resultStatusFailed string = "failed"
+)
+
+var (
+	succeededConditions []string = []string{string(v1beta1.PipelineRunReasonSuccessful),
+		string(v1beta1.PipelineRunReasonCompleted)}
+	failedConditions []string = []string{string(v1beta1.PipelineRunReasonFailed),
+		string(v1beta1.PipelineRunReasonCancelled),
+		string(v1beta1.PipelineRunReasonTimedOut)}
 )
 
 // TODO make general vailable
@@ -42,14 +51,11 @@ func GetResultState(url string) string {
 }
 
 func IsSuccessful(status *v1beta1.PipelineRunStatus) bool {
-	return isCondition(status, v1beta1.PipelineRunReasonSuccessful)
+	return util.SliceContains(succeededConditions,
+		status.GetCondition(apis.ConditionSucceeded).Reason)
 }
 
 func IsFailed(status *v1beta1.PipelineRunStatus) bool {
-	return isCondition(status, v1beta1.PipelineRunReasonFailed)
-}
-
-func isCondition(status *v1beta1.PipelineRunStatus, reason v1beta1.PipelineRunReason) bool {
-	condition := status.GetCondition(apis.ConditionSucceeded)
-	return condition.Reason == string(reason)
+	return util.SliceContains(failedConditions,
+		status.GetCondition(apis.ConditionSucceeded).Reason)
 }
