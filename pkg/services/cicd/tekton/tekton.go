@@ -114,8 +114,13 @@ func notifyStatus(pipelineRun *v1beta1.PipelineRun) bool {
 		return false
 	}
 	condition := pipelineRun.Status.GetCondition(apis.ConditionSucceeded)
-	return (condition.Reason == string(v1beta1.PipelineRunReasonSuccessful) && waitForResults(pipelineRun)) ||
-		condition.Reason == string(v1beta1.PipelineRunReasonFailed)
+	return (util.SliceContains([]string{
+		string(v1beta1.PipelineRunReasonSuccessful),
+		string(v1beta1.PipelineRunReasonCompleted)}, condition.Reason) && waitForResults(pipelineRun)) ||
+		util.SliceContains([]string{
+			string(v1beta1.PipelineRunReasonFailed),
+			string(v1beta1.PipelineRunReasonCancelled),
+			string(v1beta1.PipelineRunReasonTimedOut)}, condition.Reason)
 }
 
 func waitForResults(pipelineRun *v1beta1.PipelineRun) bool {
