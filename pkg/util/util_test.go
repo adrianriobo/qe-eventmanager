@@ -24,3 +24,10 @@ func TestSliceItem(t *testing.T) {
 		t.Fatal("Slice shoud contain")
 	}
 }
+
+func TestSliceNoItem(t *testing.T) {
+	contains, value := SliceItem([]string{"foo", "bar"}, "baz", func(e string) bool { return e == "baz" }, func(e string) string { return e })
+	if contains || value == "baz" {
+		t.Fatal("Slice shoud not contain")
+	}
+}
