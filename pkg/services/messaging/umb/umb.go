@@ -113,8 +113,11 @@ func consume(subscription *subscription) {
 	for subscription.active {
 		msg, err := subscription.subscription.Read()
 		if err != nil {
-			logging.Errorf("Error reading from topic: %s. %s", subscription.topic, err)
-			break
+			if err.Error() != "remote error: tls: user canceled" {
+				logging.Errorf("Error reading from topic: %s. %s", subscription.topic, err)
+				break
+			}
+			logging.Errorf("Error: %v", err)
 		}
 		logging.Debugf("New message from %s, adding new handler for it", subscription.topic)
 		for _, handler := range subscription.handlers {
