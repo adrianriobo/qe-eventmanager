@@ -38,7 +38,7 @@ func setupUMBClient(providersFilePath string) (err error) {
 	if err != nil {
 		return err
 	}
-	err = umb.CreateClient(
+	err = umb.InitClient(
 		providersInfo.UMB.ConsumerID,
 		providersInfo.UMB.Driver,
 		strings.Split(providersInfo.UMB.Brokers, ","),
