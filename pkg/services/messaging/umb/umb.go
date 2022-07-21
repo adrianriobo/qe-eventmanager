@@ -17,15 +17,23 @@ const (
 	Amqp  string = "amqp"
 )
 
+type umbInformation struct {
+	consumerID                                   string
+	protocol                                     string
+	brokers                                      []string
+	certificateFile, privateKeyFile, caCertsFile []byte
+}
+
 type umb struct {
-	consumerID    string
-	client        api.ClientInterface
-	subscriptions []subscription
-	consumers     *sync.WaitGroup
-	handlers      *sync.WaitGroup
-	subscribe     sync.Mutex
-	send          sync.Mutex
-	active        bool
+	umbInformation umbInformation
+	client         api.ClientInterface
+	subscriptions  map[string]*subscription
+	consumers      *sync.WaitGroup
+	handlers       *sync.WaitGroup
+	reconnect      chan string
+	subscribe      sync.Mutex
+	send           sync.Mutex
+	active         bool
 }
 
 type subscription struct {
@@ -37,13 +45,34 @@ type subscription struct {
 
 var _umb *umb
 
-func CreateClient(consumerID, protocol string, brokers []string, certificateFile, privateKeyFile, caCertsFile []byte) (err error) {
-	_umb = &umb{
-		consumerID: consumerID,
-		consumers:  &sync.WaitGroup{},
-		handlers:   &sync.WaitGroup{},
-		active:     true}
-	_umb.client, err = createClient(protocol, brokers, certificateFile, privateKeyFile, caCertsFile)
+func InitClient(consumerID, protocol string, brokers []string, certificateFile, privateKeyFile, caCertsFile []byte) (err error) {
+	_umb, err = initUMB(umbInformation{
+		consumerID:      consumerID,
+		protocol:        protocol,
+		brokers:         brokers,
+		certificateFile: certificateFile,
+		privateKeyFile:  privateKeyFile,
+		caCertsFile:     caCertsFile,
+	})
+	return
+}
+
+func initUMB(umbInfo umbInformation) (umbClient *umb, err error) {
+	umbClient = &umb{
+		umbInformation: umbInfo,
+		subscriptions:  make(map[string]*subscription),
+		consumers:      &sync.WaitGroup{},
+		handlers:       &sync.WaitGroup{},
+		reconnect:      make(chan string),
+		active:         true}
+	umbClient.client, err = createClient(
+		umbInfo.protocol,
+		umbInfo.brokers,
+		umbInfo.certificateFile,
+		umbInfo.privateKeyFile,
+		umbInfo.caCertsFile)
+	// In case of recconnect it will re create the client and subscriptions
+	go umbClient.handleReconnect()
 	return
 }
 
@@ -64,22 +93,7 @@ func SendBytes(destination string, message []byte) error {
 }
 
 func Subscribe(subscriptionID, topic string, handlers []api.MessageHandler) error {
-	_umb.subscribe.Lock()
-	defer _umb.subscribe.Unlock()
-	logging.Infof("Adding a subscription %s on topic %s", subscriptionID, topic)
-	internalSubscription, err := _umb.client.Subscribe(umbTopic(subscriptionID, topic), handlers)
-	if err != nil {
-		return err
-	}
-	var subscription = subscription{
-		topic:        topic,
-		subscription: internalSubscription,
-		handlers:     handlers,
-		active:       true}
-	_umb.subscriptions = append(_umb.subscriptions, subscription)
-	_umb.consumers.Add(1)
-	go consume(&subscription)
-	return nil
+	return _umb.subscribeTopic(subscriptionID, topic, handlers)
 }
 
 func GracefullShutdown() {
@@ -96,6 +110,56 @@ func GracefullShutdown() {
 	logging.Infof("Client disconnected from UMB")
 }
 
+// In case of error on subscription we will force close
+// subscription and client an regenate all of them
+func (umb *umb) handleReconnect() {
+	cause := <-umb.reconnect
+	if umb.active {
+		logging.Debugf("Reconnecting client cause %s", cause)
+		umb.active = false
+		umb.unsubscribeAll()
+		umb.client.Disconnect()
+		subscriptions := umb.subscriptions
+		umb, err := initUMB(umb.umbInformation)
+		if err != nil {
+			logging.Errorf("Error on reconnection %v", err)
+		}
+		for id, subscription := range subscriptions {
+			err = umb.subscribeTopic(id, subscription.topic, subscription.handlers)
+			if err != nil {
+				logging.Errorf("Error on reconnection %v", err)
+			}
+		}
+	}
+}
+
+func (umb *umb) unsubscribeAll() {
+	for _, subscription := range umb.subscriptions {
+		if err := subscription.subscription.Unsubscribe(); err != nil {
+			logging.Error(err)
+		}
+		logging.Infof("Unsubscribing %s", subscription.topic)
+	}
+}
+
+func (umb *umb) subscribeTopic(subscriptionID, topic string, handlers []api.MessageHandler) error {
+	umb.subscribe.Lock()
+	defer umb.subscribe.Unlock()
+	logging.Infof("Adding a subscription %s on topic %s", subscriptionID, topic)
+	internalSubscription, err := umb.client.Subscribe(umbTopic(subscriptionID, topic), handlers)
+	if err != nil {
+		return err
+	}
+	umb.subscriptions[subscriptionID] = &subscription{
+		topic:        topic,
+		subscription: internalSubscription,
+		handlers:     handlers,
+		active:       true}
+	umb.consumers.Add(1)
+	go consume(umb.subscriptions[subscriptionID], umb.reconnect)
+	return nil
+}
+
 func createClient(protocol string, brokers []string,
 	certificateFile, privateKeyFile, caCertsFile []byte) (api.ClientInterface, error) {
 	switch protocol {
@@ -108,16 +172,18 @@ func createClient(protocol string, brokers []string,
 	}
 }
 
-func consume(subscription *subscription) {
+func consume(subscription *subscription, reconnect chan string) {
 	defer _umb.consumers.Done()
 	for subscription.active {
 		msg, err := subscription.subscription.Read()
 		if err != nil {
-			if err.Error() != "remote error: tls: user canceled" {
-				logging.Errorf("Error reading from topic: %s. %s", subscription.topic, err)
-				break
+			if err.Error() == "remote error: tls: user canceled" {
+				// Send cause for reconnect
+				reconnect <- fmt.Sprintf("%v on topic %s", err.Error(), subscription.topic)
+				defer close(_umb.reconnect)
 			}
-			logging.Errorf("Error: %v", err)
+			logging.Errorf("Error reading from topic: %s. %s", subscription.topic, err)
+			break
 		}
 		logging.Debugf("New message from %s, adding new handler for it", subscription.topic)
 		for _, handler := range subscription.handlers {
@@ -143,7 +209,7 @@ func handle(msg []byte, handler api.MessageHandler) {
 func umbTopic(subscriptionID, topic string) string {
 	topicCrumbs := strings.Split(topic, ".")
 	return fmt.Sprintf("Consumer.%s.%s-%s.%s",
-		_umb.consumerID,
+		_umb.umbInformation.consumerID,
 		subscriptionID,
 		topicCrumbs[len(topicCrumbs)-1],
 		topic)

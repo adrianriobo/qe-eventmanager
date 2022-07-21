@@ -129,7 +129,7 @@ func createUMBClient(info providers.UMB) (err error) {
 	if err != nil {
 		return err
 	}
-	err = umb.CreateClient(
+	err = umb.InitClient(
 		info.ConsumerID,
 		info.Driver,
 		strings.Split(info.Brokers, ","),
