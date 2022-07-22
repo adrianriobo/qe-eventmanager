@@ -58,10 +58,9 @@ func TestMatchingSimple(t *testing.T) {
 
 func TestNotMatching(t *testing.T) {
 	match, err := MatchFilters([]byte(event), []string{"$.artifact.products[?(@.nvr=='not-found')].nvr"})
-	if match || err == nil {
+	if match || err != nil {
 		t.Fatal("Expression should not match")
 	}
-
 }
 
 func TestGetStringValueFound(t *testing.T) {
