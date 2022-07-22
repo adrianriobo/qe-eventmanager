@@ -36,8 +36,10 @@ func Create(certificateFile, privateKeyFile, caCertsFile []byte,
 	for _, broker := range brokers {
 		address := fmt.Sprintf("%s://%s", schema, broker)
 		logging.Infof("Connecting to broker %s", address)
-		client, err = amqp.Dial(address, amqp.ConnTLSConfig(tlsConfig))
-		amqp.ConnIdleTimeout(defaultConnIdleTimeout)
+		client, err = amqp.Dial(address,
+			amqp.ConnTLSConfig(tlsConfig),
+			amqp.ConnIdleTimeout(defaultConnIdleTimeout))
+
 		if err == nil {
 			logging.Debugf("Established TCP connection to broker %s", address)
 			break
