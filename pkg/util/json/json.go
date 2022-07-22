@@ -21,7 +21,7 @@ func MatchFilters(event []byte, filters []string) (bool, error) {
 			return false, fmt.Errorf("error with %v", err)
 		}
 		if len(node) == 0 {
-			return false, fmt.Errorf("error event does not match the filters")
+			return false, nil
 		}
 	}
 	return true, nil
