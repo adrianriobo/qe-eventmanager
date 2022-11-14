@@ -1,4 +1,7 @@
-VERSION ?= 0.0.1
+PROJECT?=github.com/adrianriobo/qe-eventmanager
+VERSION ?= 0.0.4
+COMMIT ?= $(shell git rev-parse --short HEAD)
+BUILD_TIME ?= $(shell date -u '+%Y-%m-%d_%H:%M:%S')
 CONTAINER_MANAGER ?= podman
 # Image URL to use all building/pushing image targets
 IMG ?= quay.io/ariobolo/qe-eventmanager:${VERSION}
@@ -31,7 +34,11 @@ install: $(SOURCES)
 	go install -ldflags="$(LDFLAGS)" $(GO_EXTRA_BUILDFLAGS) ./cmd
 
 $(BUILD_DIR)/qe-eventmanager: $(SOURCES)
-	GOOS=linux GOARCH=amd64 go build -gcflags="$(GCFLAGS)" -ldflags="$(LDFLAGS)" -o $(BUILD_DIR)/qe-eventmanager $(GO_EXTRA_BUILDFLAGS) ./cmd
+	GOOS=linux GOARCH=amd64 go build -gcflags="$(GCFLAGS)" -ldflags="$(LDFLAGS) \
+	-X ${PROJECT}/version.Version=${VERSION} \
+	-X ${PROJECT}/version.Commit=${COMMIT} \
+	-X ${PROJECT}/version.BuildTime=${BUILD_TIME}" \
+	-o $(BUILD_DIR)/qe-eventmanager $(GO_EXTRA_BUILDFLAGS) ./cmd
 
 
  
