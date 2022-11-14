@@ -12,6 +12,7 @@ import (
 	"github.com/adrianriobo/qe-eventmanager/pkg/configuration/providers"
 	"github.com/adrianriobo/qe-eventmanager/pkg/manager/flows/actions"
 	"github.com/adrianriobo/qe-eventmanager/pkg/manager/flows/inputs"
+	"github.com/adrianriobo/qe-eventmanager/pkg/manager/status"
 
 	tektonClient "github.com/adrianriobo/qe-eventmanager/pkg/services/cicd/tekton"
 	"github.com/adrianriobo/qe-eventmanager/pkg/services/messaging/umb"
@@ -32,6 +33,10 @@ func Initialize(providersFilePath string, flowsFilePath []string) {
 		os.Exit(1)
 	}
 	if err := manageFlows(flows); err != nil {
+		logging.Error(err)
+		os.Exit(1)
+	}
+	if err := status.Init(); err != nil {
 		logging.Error(err)
 		os.Exit(1)
 	}
