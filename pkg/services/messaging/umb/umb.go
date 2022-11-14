@@ -6,6 +6,7 @@ import (
 	"strings"
 	"sync"
 
+	"github.com/adrianriobo/qe-eventmanager/pkg/manager/status"
 	"github.com/adrianriobo/qe-eventmanager/pkg/services/messaging/umb/api"
 	"github.com/adrianriobo/qe-eventmanager/pkg/services/messaging/umb/impl/amqp"
 	"github.com/adrianriobo/qe-eventmanager/pkg/services/messaging/umb/impl/stomp"
@@ -114,23 +115,31 @@ func GracefullShutdown() {
 // subscription and client an regenate all of them
 func (umb *umb) handleReconnect() {
 	cause := <-umb.reconnect
+	logging.Debugf("Reconnecting client cause %s", cause)
 	if umb.active {
-		logging.Debugf("Reconnecting client cause %s", cause)
-		umb.active = false
+		// Remove subscriptions and disconnect
 		umb.unsubscribeAll()
 		umb.client.Disconnect()
-		subscriptions := umb.subscriptions
-		umb, err := initUMB(umb.umbInformation)
-		if err != nil {
-			logging.Errorf("Error on reconnection %v", err)
-		}
-		for id, subscription := range subscriptions {
-			err = umb.subscribeTopic(id, subscription.topic, subscription.handlers)
-			if err != nil {
-				logging.Errorf("Error on reconnection %v", err)
-			}
-		}
 	}
+	// Send signal to mark listerner as unhealthy
+	status.SendSignal()
+	// if umb.active {
+	// logging.Debugf("Reconnecting client cause %s", cause)
+	// umb.active = false
+	// umb.unsubscribeAll()
+	// umb.client.Disconnect()
+	// subscriptions := umb.subscriptions
+	// umb, err := initUMB(umb.umbInformation)
+	// if err != nil {
+	// 	logging.Errorf("Error on reconnection %v", err)
+	// }
+	// for id, subscription := range subscriptions {
+	// 	err = umb.subscribeTopic(id, subscription.topic, subscription.handlers)
+	// 	if err != nil {
+	// 		logging.Errorf("Error on reconnection %v", err)
+	// 	}
+	// }
+	// }
 }
 
 func (umb *umb) unsubscribeAll() {
