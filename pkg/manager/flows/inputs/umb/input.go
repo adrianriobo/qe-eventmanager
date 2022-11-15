@@ -55,7 +55,7 @@ func (u umbFlow) Match(event []byte) error {
 		return err
 	}
 	if !match {
-		logging.Debugf("Error checking filters for event %v", err)
+		logging.Debug("no matching filters, dimissing message")
 		return fmt.Errorf("filters do not match, message will not be processed")
 	}
 	logging.Debugf("Found event marching the filters for flow %s", u.flowName)
