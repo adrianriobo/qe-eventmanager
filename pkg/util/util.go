@@ -41,7 +41,10 @@ func SliceContains[T comparable](sourceSlice []T, item T) bool {
 	return idx != -1
 }
 
-func SliceItem[T any](sourceSlice []T, item T,
+// For an slice of any Type, we can check if is there any element based on
+// a custom contains function
+// if contains is true we can get the element based on a custom value function
+func SliceItem[T any](sourceSlice []T,
 	contains func(e T) bool,
 	value func(e T) T) (bool, T) {
 	idx := slices.IndexFunc(sourceSlice,
