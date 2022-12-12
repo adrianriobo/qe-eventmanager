@@ -19,14 +19,14 @@ func TestSliceNotContains(t *testing.T) {
 }
 
 func TestSliceItem(t *testing.T) {
-	contains, value := SliceItem([]string{"foo", "bar"}, "foo", func(e string) bool { return e == "foo" }, func(e string) string { return e })
+	contains, value := SliceItem([]string{"foo", "bar"}, func(e string) bool { return e == "foo" }, func(e string) string { return e })
 	if !contains || value != "foo" {
 		t.Fatal("Slice shoud contain")
 	}
 }
 
 func TestSliceNoItem(t *testing.T) {
-	contains, value := SliceItem([]string{"foo", "bar"}, "baz", func(e string) bool { return e == "baz" }, func(e string) string { return e })
+	contains, value := SliceItem([]string{"foo", "bar"}, func(e string) bool { return e == "baz" }, func(e string) string { return e })
 	if contains || value == "baz" {
 		t.Fatal("Slice shoud not contain")
 	}
