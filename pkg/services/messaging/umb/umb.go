@@ -10,6 +10,7 @@ import (
 	"github.com/adrianriobo/qe-eventmanager/pkg/services/messaging/umb/api"
 	"github.com/adrianriobo/qe-eventmanager/pkg/services/messaging/umb/impl/amqp"
 	"github.com/adrianriobo/qe-eventmanager/pkg/services/messaging/umb/impl/stomp"
+	"github.com/adrianriobo/qe-eventmanager/pkg/util"
 	"github.com/adrianriobo/qe-eventmanager/pkg/util/logging"
 )
 
@@ -17,6 +18,10 @@ const (
 	Stomp string = "stomp"
 	Amqp  string = "amqp"
 )
+
+var breakingErrors = []string{
+	"remote error: tls: user canceled",
+	"connection timed out"}
 
 type umbInformation struct {
 	consumerID                                   string
@@ -31,7 +36,7 @@ type umb struct {
 	subscriptions  map[string]*subscription
 	consumers      *sync.WaitGroup
 	handlers       *sync.WaitGroup
-	reconnect      chan string
+	breakingError  chan string
 	subscribe      sync.Mutex
 	send           sync.Mutex
 	active         bool
@@ -64,7 +69,7 @@ func initUMB(umbInfo umbInformation) (umbClient *umb, err error) {
 		subscriptions:  make(map[string]*subscription),
 		consumers:      &sync.WaitGroup{},
 		handlers:       &sync.WaitGroup{},
-		reconnect:      make(chan string),
+		breakingError:  make(chan string),
 		active:         true}
 	umbClient.client, err = createClient(
 		umbInfo.protocol,
@@ -73,7 +78,7 @@ func initUMB(umbInfo umbInformation) (umbClient *umb, err error) {
 		umbInfo.privateKeyFile,
 		umbInfo.caCertsFile)
 	// In case of recconnect it will re create the client and subscriptions
-	go umbClient.handleReconnect()
+	go umbClient.handleBreakingError()
 	return
 }
 
@@ -113,42 +118,15 @@ func GracefullShutdown() {
 
 // In case of error on subscription we will force close
 // subscription and client an regenate all of them
-func (umb *umb) handleReconnect() {
-	cause := <-umb.reconnect
-	logging.Debugf("Reconnecting client cause %s", cause)
+func (umb *umb) handleBreakingError() {
+	<-umb.breakingError
+	logging.Debugf("Service will shutdown gracefully")
 	if umb.active {
-		// Remove subscriptions and disconnect
-		umb.unsubscribeAll()
-		umb.client.Disconnect()
+		// GracefullShutdown
+		GracefullShutdown()
 	}
 	// Send signal to mark listerner as unhealthy
 	status.SendSignal()
-	// if umb.active {
-	// logging.Debugf("Reconnecting client cause %s", cause)
-	// umb.active = false
-	// umb.unsubscribeAll()
-	// umb.client.Disconnect()
-	// subscriptions := umb.subscriptions
-	// umb, err := initUMB(umb.umbInformation)
-	// if err != nil {
-	// 	logging.Errorf("Error on reconnection %v", err)
-	// }
-	// for id, subscription := range subscriptions {
-	// 	err = umb.subscribeTopic(id, subscription.topic, subscription.handlers)
-	// 	if err != nil {
-	// 		logging.Errorf("Error on reconnection %v", err)
-	// 	}
-	// }
-	// }
-}
-
-func (umb *umb) unsubscribeAll() {
-	for _, subscription := range umb.subscriptions {
-		if err := subscription.subscription.Unsubscribe(); err != nil {
-			logging.Error(err)
-		}
-		logging.Infof("Unsubscribing %s", subscription.topic)
-	}
 }
 
 func (umb *umb) subscribeTopic(subscriptionID, topic string, handlers []api.MessageHandler) error {
@@ -165,7 +143,7 @@ func (umb *umb) subscribeTopic(subscriptionID, topic string, handlers []api.Mess
 		handlers:     handlers,
 		active:       true}
 	umb.consumers.Add(1)
-	go consume(umb.subscriptions[subscriptionID], umb.reconnect)
+	go consume(umb.subscriptions[subscriptionID], umb.breakingError)
 	return nil
 }
 
@@ -181,15 +159,19 @@ func createClient(protocol string, brokers []string,
 	}
 }
 
-func consume(subscription *subscription, reconnect chan string) {
+func consume(subscription *subscription, breakingError chan string) {
 	defer _umb.consumers.Done()
 	for subscription.active {
 		msg, err := subscription.subscription.Read()
 		if err != nil {
-			if err.Error() == "remote error: tls: user canceled" {
+			contains, _ := util.SliceItem(
+				breakingErrors,
+				func(e string) bool { return strings.Contains(err.Error(), e) },
+				func(e string) string { return e })
+			if contains {
 				// Send cause for reconnect
-				reconnect <- fmt.Sprintf("%v on topic %s", err.Error(), subscription.topic)
-				defer close(_umb.reconnect)
+				breakingError <- fmt.Sprintf("%v on topic %s", err.Error(), subscription.topic)
+				defer close(_umb.breakingError)
 			}
 			logging.Errorf("Error reading from topic: %s. %s", subscription.topic, err)
 			break
