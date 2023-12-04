@@ -41,7 +41,7 @@ func Init() error {
 		return err
 	}
 
-	go checkState()
+	go checkState(status)
 
 	return nil
 }
@@ -53,11 +53,11 @@ func getState() (current string) {
 	return current
 }
 
-func checkState() {
-	<-status.stateChannel
-	status.stateHandler.Lock()
-	status.state = stateUnhealthy
-	status.stateHandler.Unlock()
+func checkState(s *Status) {
+	<-s.stateChannel
+	s.stateHandler.Lock()
+	s.state = stateUnhealthy
+	s.stateHandler.Unlock()
 }
 
 func SendSignal() {
