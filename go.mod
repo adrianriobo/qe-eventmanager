@@ -1,6 +1,6 @@
 module github.com/adrianriobo/qe-eventmanager
 
-go 1.18
+go 1.20
 
 require (
 	github.com/Azure/go-amqp v0.17.5
