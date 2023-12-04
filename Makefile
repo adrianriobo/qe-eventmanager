@@ -1,5 +1,5 @@
 PROJECT?=github.com/adrianriobo/qe-eventmanager
-VERSION ?= 0.0.4
+VERSION ?= 0.0.4-dev
 COMMIT ?= $(shell git rev-parse --short HEAD)
 BUILD_TIME ?= $(shell date -u '+%Y-%m-%d_%H:%M:%S')
 CONTAINER_MANAGER ?= podman
