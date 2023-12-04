@@ -126,6 +126,7 @@ func (umb *umb) handleBreakingError() {
 		GracefullShutdown()
 	}
 	// Send signal to mark listerner as unhealthy
+	logging.Debugf("Sending signal for unhealthy service")
 	status.SendSignal()
 }
 

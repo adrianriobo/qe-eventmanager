@@ -4,6 +4,8 @@ import (
 	"fmt"
 	"net/http"
 	"sync"
+
+	"github.com/adrianriobo/qe-eventmanager/pkg/util/logging"
 )
 
 type Status struct {
@@ -47,19 +49,24 @@ func Init() error {
 }
 
 func getState() (current string) {
+	logging.Debugf("Check health state")
 	status.stateHandler.Lock()
 	current = status.state
+	logging.Debugf("Health state is %s", current)
 	status.stateHandler.Unlock()
 	return current
 }
 
 func checkState(s *Status) {
 	<-s.stateChannel
+	logging.Debugf("Receive stateChannel event")
 	s.stateHandler.Lock()
+	logging.Debugf("set state as %s", stateUnhealthy)
 	s.state = stateUnhealthy
 	s.stateHandler.Unlock()
 }
 
 func SendSignal() {
+	logging.Debugf("Send stateChannel event")
 	status.stateChannel <- struct{}{}
 }
