@@ -145,6 +145,11 @@ func (umb *umb) subscribeTopic(subscriptionID, topic string, handlers []api.Mess
 		active:       true}
 	umb.consumers.Add(1)
 	go consume(umb.subscriptions[subscriptionID], umb.breakingError)
+	// Close the error channel when no consumers left
+	go func() {
+		umb.consumers.Wait()
+		close(umb.breakingError)
+	}()
 	return nil
 }
 
@@ -172,7 +177,6 @@ func consume(subscription *subscription, breakingError chan string) {
 			if contains {
 				// Send cause for reconnect
 				breakingError <- fmt.Sprintf("%v on topic %s", err.Error(), subscription.topic)
-				defer close(_umb.breakingError)
 			}
 			logging.Errorf("Error reading from topic: %s. %s", subscription.topic, err)
 			break
