@@ -4,7 +4,7 @@ go 1.18
 
 require (
 	github.com/Azure/go-amqp v0.17.5
-	github.com/go-stomp/stomp/v3 v3.0.0
+	github.com/go-stomp/stomp/v3 v3.0.5
 	github.com/joshdk/go-junit v0.0.0-20210226021600-6145f504ca0d
 	github.com/sirupsen/logrus v1.8.1
 	github.com/spf13/cobra v1.3.0

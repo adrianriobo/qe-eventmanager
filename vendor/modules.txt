@@ -69,10 +69,11 @@ github.com/go-openapi/jsonreference
 # github.com/go-openapi/swag v0.19.15
 ## explicit; go 1.11
 github.com/go-openapi/swag
-# github.com/go-stomp/stomp/v3 v3.0.0
+# github.com/go-stomp/stomp/v3 v3.0.5
 ## explicit; go 1.15
 github.com/go-stomp/stomp/v3
 github.com/go-stomp/stomp/v3/frame
+github.com/go-stomp/stomp/v3/internal/log
 # github.com/gogo/protobuf v1.3.2
 ## explicit; go 1.15
 github.com/gogo/protobuf/proto

@@ -3,7 +3,6 @@ package stomp
 import (
 	"errors"
 	"io"
-	"log"
 	"net"
 	"strconv"
 	"sync"
@@ -22,6 +21,9 @@ const DefaultMsgSendTimeout = 10 * time.Second
 // Default receipt timeout in Conn.Send function
 const DefaultRcvReceiptTimeout = 30 * time.Second
 
+// Reply-To header used for temporary queues/RPC with rabbit.
+const ReplyToHeader = "reply-to"
+
 // A Conn is a connection to a STOMP server. Create a Conn using either
 // the Dial or Connect function.
 type Conn struct {
@@ -39,6 +41,7 @@ type Conn struct {
 	closed                  bool
 	closeMutex              *sync.Mutex
 	options                 *connOptions
+	log                     Logger
 }
 
 type writeRequest struct {
@@ -64,7 +67,7 @@ func Dial(network, addr string, opts ...func(*Conn) error) (*Conn, error) {
 
 	// Add option to set host and make it the first option in list,
 	// so that if host has been explicitly specified it will override.
-	opts = append([](func(*Conn) error){ConnOpt.Host(host)}, opts...)
+	opts = append([]func(*Conn) error{ConnOpt.Host(host)}, opts...)
 
 	return Connect(c, opts...)
 }
@@ -86,6 +89,8 @@ func Connect(conn io.ReadWriteCloser, opts ...func(*Conn) error) (*Conn, error) 
 	if err != nil {
 		return nil, err
 	}
+
+	c.log = options.Logger
 
 	if options.ReadBufferSize > 0 {
 		reader = frame.NewReaderSize(conn, options.ReadBufferSize)
@@ -311,7 +316,7 @@ func processLoop(c *Conn, writer *frame.Writer) {
 				}
 
 			case frame.ERROR:
-				log.Println("received ERROR; Closing underlying connection")
+				c.log.Error("received ERROR; Closing underlying connection")
 				for _, ch := range channels {
 					ch <- f
 					close(ch)
@@ -329,7 +334,7 @@ func processLoop(c *Conn, writer *frame.Writer) {
 					if ch, ok := channels[id]; ok {
 						ch <- f
 					} else {
-						log.Println("ignored MESSAGE for subscription", id)
+						c.log.Infof("ignored MESSAGE for subscription: %s", id)
 					}
 				}
 			}
@@ -352,23 +357,38 @@ func processLoop(c *Conn, writer *frame.Writer) {
 				}
 			}
 
+			// default is to always send a frame.
+			var sendFrame = true
+
 			switch req.Frame.Command {
 			case frame.SUBSCRIBE:
 				id, _ := req.Frame.Header.Contains(frame.Id)
 				channels[id] = req.C
+
+				// if using a temp queue, map that destination as a known channel
+				// however, don't send the frame, it's most likely an invalid destination
+				// on the broker.
+				if replyTo, ok := req.Frame.Header.Contains(ReplyToHeader); ok {
+					channels[replyTo] = req.C
+					sendFrame = false
+				}
+
 			case frame.UNSUBSCRIBE:
 				id, _ := req.Frame.Header.Contains(frame.Id)
 				// is this trying to be too clever -- add a receipt
 				// header so that when the server responds with a
 				// RECEIPT frame, the corresponding channel will be closed
 				req.Frame.Header.Set(frame.Receipt, id)
+
 			}
 
-			// frame to send
-			err := writer.Write(req.Frame)
-			if err != nil {
-				sendError(channels, err)
-				return
+			// frame to send, if enabled
+			if sendFrame {
+				err := writer.Write(req.Frame)
+				if err != nil {
+					sendError(channels, err)
+					return
+				}
 			}
 		}
 	}
@@ -731,7 +751,9 @@ func (c *Conn) createAckNackFrame(msg *Message, ack bool) (*frame.Frame, error) 
 			return nil, missingHeader(frame.MessageId)
 		}
 	case V12:
+		// message frame contains ack header
 		if ack, ok := msg.Header.Contains(frame.Ack); ok {
+			// ack frame should reference it as id
 			f.Header.Add(frame.Id, ack)
 		} else {
 			return nil, missingHeader(frame.Ack)
