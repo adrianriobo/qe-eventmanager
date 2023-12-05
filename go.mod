@@ -12,7 +12,7 @@ require (
 	github.com/spf13/viper v1.10.0
 	github.com/spyzhov/ajson v0.6.0
 	github.com/tektoncd/pipeline v0.35.1
-	golang.org/x/exp v0.0.0-20220518171630-0b5c67f07fdf
+	golang.org/x/exp v0.0.0-20231127185646-65229373498e
 	k8s.io/api v0.23.5
 	k8s.io/apimachinery v0.23.5
 	k8s.io/client-go v0.23.5

@@ -314,8 +314,8 @@ golang.org/x/crypto/openpgp/elgamal
 golang.org/x/crypto/openpgp/errors
 golang.org/x/crypto/openpgp/packet
 golang.org/x/crypto/openpgp/s2k
-# golang.org/x/exp v0.0.0-20220518171630-0b5c67f07fdf
-## explicit; go 1.18
+# golang.org/x/exp v0.0.0-20231127185646-65229373498e
+## explicit; go 1.20
 golang.org/x/exp/constraints
 golang.org/x/exp/slices
 # golang.org/x/net v0.0.0-20220325170049-de3da57026de
