@@ -19,8 +19,8 @@ func GetHomeDir() string {
 }
 
 func GenerateCorrelation() string {
-	rand.Seed(time.Now().UnixNano())
-	return strconv.Itoa(1000000 + rand.Intn(8000000))
+	r := rand.New(rand.NewSource(time.Now().UnixNano()))
+	return strconv.Itoa(1000000 + r.Intn(8000000))
 }
 
 func IsEmpty(source interface{}) bool {
