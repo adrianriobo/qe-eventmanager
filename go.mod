@@ -6,7 +6,7 @@ require (
 	github.com/Azure/go-amqp v0.17.5
 	github.com/go-stomp/stomp/v3 v3.0.5
 	github.com/joshdk/go-junit v0.0.0-20210226021600-6145f504ca0d
-	github.com/sirupsen/logrus v1.8.1
+	github.com/sirupsen/logrus v1.9.3
 	github.com/spf13/cobra v1.3.0
 	github.com/spf13/pflag v1.0.5
 	github.com/spf13/viper v1.10.0
@@ -90,7 +90,7 @@ require (
 	golang.org/x/net v0.0.0-20220325170049-de3da57026de // indirect
 	golang.org/x/oauth2 v0.0.0-20220309155454-6242fa91716a
 	golang.org/x/sync v0.0.0-20210220032951-036812b2e83c // indirect
-	golang.org/x/sys v0.0.0-20220328115105-d36c6a25d886 // indirect
+	golang.org/x/sys v0.0.0-20220715151400-c0bba94af5f8 // indirect
 	golang.org/x/term v0.0.0-20210927222741-03fcf44c2211 // indirect
 	golang.org/x/text v0.3.7 // indirect
 	golang.org/x/time v0.0.0-20220224211638-0e9765cccd65 // indirect
