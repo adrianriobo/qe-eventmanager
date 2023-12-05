@@ -3,8 +3,8 @@ module github.com/adrianriobo/qe-eventmanager
 go 1.20
 
 require (
-	github.com/go-stomp/stomp/v3 v3.0.5
 	github.com/Azure/go-amqp v1.0.2
+	github.com/go-stomp/stomp/v3 v3.0.5
 	github.com/joshdk/go-junit v0.0.0-20210226021600-6145f504ca0d
 	github.com/sirupsen/logrus v1.8.1
 	github.com/spf13/cobra v1.3.0
@@ -103,8 +103,8 @@ require (
 	gopkg.in/inf.v0 v0.9.1 // indirect
 	gopkg.in/ini.v1 v1.66.2 // indirect
 	gopkg.in/yaml.v2 v2.4.0 // indirect
-	k8s.io/klog/v2 v2.80.1 // indirect
 	gopkg.in/yaml.v3 v3.0.1 // indirect
+	k8s.io/klog/v2 v2.80.1 // indirect
 	k8s.io/kube-openapi v0.0.0-20220124234850-424119656bbf // indirect
 	sigs.k8s.io/json v0.0.0-20211208200746-9f7c6b3444d2 // indirect
 	sigs.k8s.io/structured-merge-diff/v4 v4.2.1 // indirect
