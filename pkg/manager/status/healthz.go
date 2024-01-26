@@ -49,10 +49,10 @@ func Init() error {
 }
 
 func getState() (current string) {
-	logging.Debugf("Check health state")
+	// logging.Debugf("Check health state")
 	status.stateHandler.Lock()
 	current = status.state
-	logging.Debugf("Health state is %s", current)
+	// logging.Debugf("Health state is %s", current)
 	status.stateHandler.Unlock()
 	return current
 }
