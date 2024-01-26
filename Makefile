@@ -1,5 +1,5 @@
 PROJECT?=github.com/adrianriobo/qe-eventmanager
-VERSION ?= 0.0.4
+VERSION ?= 0.0.4-dev
 COMMIT ?= $(shell git rev-parse --short HEAD)
 BUILD_TIME ?= $(shell date -u '+%Y-%m-%d_%H:%M:%S')
 CONTAINER_MANAGER ?= podman
@@ -11,7 +11,7 @@ GOPATH ?= $(shell go env GOPATH)
 BUILD_DIR ?= out
 SOURCE_DIRS = cmd pkg test
 # https://golang.org/cmd/link/
-LDFLAGS := $(VERSION_VARIABLES) -extldflags='-static' ${GO_EXTRA_LDFLAGS}
+LDFLAGS := $(VERSION_VARIABLES) ${GO_EXTRA_LDFLAGS}
 GCFLAGS := all=-N -l
 
 # Add default target
@@ -34,13 +34,11 @@ install: $(SOURCES)
 	go install -ldflags="$(LDFLAGS)" $(GO_EXTRA_BUILDFLAGS) ./cmd
 
 $(BUILD_DIR)/qe-eventmanager: $(SOURCES)
-	GOOS=linux GOARCH=amd64 go build -gcflags="$(GCFLAGS)" -ldflags="$(LDFLAGS) \
+	go build -gcflags="$(GCFLAGS)" -ldflags="$(LDFLAGS) \
 	-X ${PROJECT}/version.Version=${VERSION} \
 	-X ${PROJECT}/version.Commit=${COMMIT} \
 	-X ${PROJECT}/version.BuildTime=${BUILD_TIME}" \
 	-o $(BUILD_DIR)/qe-eventmanager $(GO_EXTRA_BUILDFLAGS) ./cmd
-
-
  
 .PHONY: build 
 build: $(BUILD_DIR)/qe-eventmanager
@@ -63,15 +61,16 @@ $(GOPATH)/bin/golangci-lint:
 
 # Run golangci-lint against code
 .PHONY: lint
-lint: $(GOPATH)/bin/golangci-lint
-	$(GOPATH)/bin/golangci-lint run
+lint: 
+	${CONTAINER_MANAGER} run -it --rm -v ${PWD}:/workspace:z --workdir=/workspace quay.io/app-sre/golangci-lint:v1.53.2-alpine \
+		golangci-lint run -v --timeout 10m
 
 # Build the container image
-.PHONY: container-build
-container-build: test
-	${CONTAINER_MANAGER} build -t ${IMG} -f images/builder/Dockerfile .
+.PHONY: oci-build
+oci-build: test
+	${CONTAINER_MANAGER} build -t ${IMG} -f oci/Containerfile .
 
 # Push the docker image
-.PHONY: container-push
-container-push:
+.PHONY: oci-push
+oci-push:
 	${CONTAINER_MANAGER} push ${IMG}

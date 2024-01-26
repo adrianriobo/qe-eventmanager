@@ -2,7 +2,6 @@ package umb
 
 import (
 	"fmt"
-	"io/ioutil"
 	"os"
 	"strings"
 
@@ -17,7 +16,7 @@ func Send(providersFilePath, destination, eventFilePath string) error {
 		logging.Error(err)
 		os.Exit(1)
 	}
-	message, err := ioutil.ReadFile(eventFilePath)
+	message, err := os.ReadFile(eventFilePath)
 	if err != nil {
 		logging.Error(err)
 		os.Exit(1)

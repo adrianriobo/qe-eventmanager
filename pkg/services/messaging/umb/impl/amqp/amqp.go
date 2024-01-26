@@ -17,7 +17,7 @@ const (
 )
 
 type Client struct {
-	Client  *amqp.Client
+	Conn    *amqp.Conn
 	Session *amqp.Session
 }
 
@@ -27,18 +27,23 @@ type Subscription struct {
 
 func Create(certificateFile, privateKeyFile, caCertsFile []byte,
 	brokers []string) (api.ClientInterface, error) {
+	ctx := context.Background()
 	tlsConfig, err :=
 		tls.CreateTLSConfig(certificateFile, privateKeyFile, caCertsFile)
 	if err != nil {
 		return nil, err
 	}
-	var client *amqp.Client
+	var conn *amqp.Conn
 	for _, broker := range brokers {
 		address := fmt.Sprintf("%s://%s", schema, broker)
 		logging.Infof("Connecting to broker %s", address)
-		client, err = amqp.Dial(address,
-			amqp.ConnTLSConfig(tlsConfig),
-			amqp.ConnIdleTimeout(defaultConnIdleTimeout))
+		conn, err = amqp.Dial(
+			ctx,
+			address,
+			&amqp.ConnOptions{
+				TLSConfig:   tlsConfig,
+				IdleTimeout: defaultConnIdleTimeout,
+			})
 
 		if err == nil {
 			logging.Debugf("Established TCP connection to broker %s", address)
@@ -47,20 +52,20 @@ func Create(certificateFile, privateKeyFile, caCertsFile []byte,
 		// log.WithField("broker", url).Warning("Connection to broker failed: %s", err.Error())
 		logging.Debugf("Connection to broker failed: %v", err)
 	}
-	if client == nil {
+	if conn == nil {
 		return nil, fmt.Errorf("unable to establish connection for provided brokers")
 	}
-	session, err := client.NewSession()
+	session, err := conn.NewSession(ctx, nil)
 	if err != nil {
 		return nil, err
 	}
 	return &Client{
-		Client:  client,
+		Conn:    conn,
 		Session: session}, err
 }
 
 func (s Subscription) Read() ([]byte, error) {
-	msg, err := s.Receiver.Receive(context.TODO())
+	msg, err := s.Receiver.Receive(context.TODO(), nil)
 	if err != nil {
 		return nil, err
 	}
@@ -82,9 +87,11 @@ func (s Subscription) Unsubscribe() (err error) {
 func (c *Client) Subscribe(destination string,
 	handlers []api.MessageHandler) (api.SubscriptionInterface, error) {
 	receiver, err := c.Session.NewReceiver(
-		amqp.LinkSourceAddress(destination),
-		amqp.LinkCredit(10),
-	)
+		context.Background(),
+		destination,
+		&amqp.ReceiverOptions{
+			Credit: 10,
+		})
 	if err != nil {
 		return nil, err
 	}
@@ -94,14 +101,15 @@ func (c *Client) Subscribe(destination string,
 func (c *Client) Send(destination string, message []byte) error {
 	topic := fmt.Sprintf("topic://%s", destination)
 	sender, err := c.Session.NewSender(
-		amqp.LinkTargetAddress(topic),
-	)
+		context.Background(),
+		topic,
+		nil)
 	if err != nil {
 		return err
 	}
 	ctx, cancel := context.WithTimeout(context.TODO(),
 		30*time.Second)
-	err = sender.Send(ctx, amqp.NewMessage(message))
+	err = sender.Send(ctx, amqp.NewMessage(message), nil)
 	if err != nil {
 		cancel()
 		return err
@@ -114,7 +122,7 @@ func (c *Client) Send(destination string, message []byte) error {
 }
 
 func (c *Client) Disconnect() {
-	if err := c.Client.Close(); err != nil {
+	if err := c.Conn.Close(); err != nil {
 		logging.Error("Error closing amqp client connetion")
 	}
 }
