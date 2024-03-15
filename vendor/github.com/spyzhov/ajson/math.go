@@ -1,8 +1,11 @@
 package ajson
 
 import (
+	"encoding/base64"
 	"math"
+	"math/rand"
 	"regexp"
+	"sort"
 	"strings"
 )
 
@@ -286,6 +289,9 @@ var (
 		},
 	}
 
+	randFunc    = rand.Float64
+	randIntFunc = rand.Intn
+
 	functions = map[string]Function{
 		"abs":         numericFunction("Abs", math.Abs),
 		"acos":        numericFunction("Acos", math.Acos),
@@ -373,6 +379,59 @@ var (
 			}
 			return valueNode(nil, "avg", Null, nil), nil
 		},
+		"b64decode": func(node *Node) (result *Node, err error) {
+			if node.IsString() {
+				if sourceString, err := node.GetString(); err != nil {
+					return nil, err
+				} else {
+					var result []byte
+					result, err = base64.StdEncoding.WithPadding(base64.StdPadding).DecodeString(sourceString)
+					if err != nil {
+						// then for NO_PAD encoded strings, if the first result with error
+						result, err = base64.StdEncoding.WithPadding(base64.NoPadding).DecodeString(sourceString)
+					}
+					if err != nil {
+						return nil, err
+					}
+					return valueNode(nil, "b64decode", String, string(result)), nil
+				}
+			}
+			return valueNode(nil, "b64decode", Null, nil), nil
+		},
+		"b64encoden": func(node *Node) (result *Node, err error) {
+			if node.IsString() {
+				if sourceString, err := node.GetString(); err != nil {
+					return nil, err
+				} else {
+					remainder := len(sourceString) % 3
+					size := len(sourceString) / 3 * 4
+					if remainder != 0 {
+						size += 1 + remainder
+					}
+					var result []byte = make([]byte, size)
+					base64.StdEncoding.WithPadding(base64.NoPadding).Encode(result, []byte(sourceString))
+					return valueNode(nil, "b64encoden", String, string(result)), nil
+				}
+			}
+			return valueNode(nil, "b64encoden", Null, nil), nil
+		},
+		"b64encode": func(node *Node) (result *Node, err error) {
+			if node.IsString() {
+				if sourceString, err := node.GetString(); err != nil {
+					return nil, err
+				} else {
+					remainder := len(sourceString) % 3
+					size := len(sourceString) / 3 * 4
+					if remainder != 0 {
+						size += 4
+					}
+					var result []byte = make([]byte, size)
+					base64.StdEncoding.WithPadding(base64.StdPadding).Encode(result, []byte(sourceString))
+					return valueNode(nil, "b64encode", String, string(result)), nil
+				}
+			}
+			return valueNode(nil, "b64encode", Null, nil), nil
+		},
 		"sum": func(node *Node) (result *Node, err error) {
 			if node.isContainer() {
 				sum := float64(0)
@@ -397,6 +456,59 @@ var (
 			} else {
 				return valueNode(nil, "not", Bool, !value), nil
 			}
+		},
+		"rand": func(node *Node) (result *Node, err error) {
+			num, err := node.GetNumeric()
+			if err != nil {
+				return
+			}
+			return valueNode(nil, "Rand", Numeric, randFunc()*num), nil
+		},
+		"randint": func(node *Node) (result *Node, err error) {
+			num, err := node.getInteger()
+			if err != nil {
+				return
+			}
+			return valueNode(nil, "RandInt", Numeric, float64(randIntFunc(num))), nil
+		},
+		"last": func(node *Node) (result *Node, err error) {
+			if node.IsArray() {
+				array := node.Inheritors()
+				if len(array) > 0 {
+					return array[len(array)-1], nil
+				}
+			}
+			return valueNode(nil, "last", Null, nil), nil
+		},
+		"first": func(node *Node) (result *Node, err error) {
+			if node.IsArray() {
+				array := node.Inheritors()
+				if len(array) > 0 {
+					return array[0], nil
+				}
+			}
+			return valueNode(nil, "first", Null, nil), nil
+		},
+		"parent": func(node *Node) (result *Node, err error) {
+			if node.parent != nil {
+				return node.parent, nil
+			}
+			return valueNode(nil, "parent", Null, nil), nil
+		},
+		"root": func(node *Node) (result *Node, err error) {
+			root := node.root()
+			if root != nil {
+				return root, nil
+			}
+			return valueNode(nil, "root", Null, nil), nil
+		},
+		"key": func(node *Node) (result *Node, err error) {
+			if node.parent != nil {
+				if node.parent.IsObject() {
+					return valueNode(nil, "key", String, node.Key()), nil
+				}
+			}
+			return valueNode(nil, "key", Null, nil), nil
 		},
 	}
 
@@ -460,4 +572,16 @@ func mathFactorial(x uint) uint {
 		return 1
 	}
 	return x * mathFactorial(x-1)
+}
+
+func comparisonOperationsOrder() []string {
+	result := make([]string, 0, len(operations))
+	for operation := range operations {
+		result = append(result, operation)
+	}
+
+	sort.Slice(result, func(i, j int) bool {
+		return len(result[i]) > len(result[j])
+	})
+	return result
 }
