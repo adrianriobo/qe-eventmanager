@@ -1,6 +1,6 @@
 # ghinstallation
 
-[![GoDoc](https://godoc.org/github.com/bradleyfalzon/ghinstallation?status.svg)](https://godoc.org/github.com/bradleyfalzon/ghinstallation)
+[![GoDoc](https://godoc.org/github.com/bradleyfalzon/ghinstallation?status.svg)](https://godoc.org/github.com/bradleyfalzon/ghinstallation/v2)
 
 `ghinstallation` provides `Transport`, which implements `http.RoundTripper` to
 provide authentication as an installation for GitHub Apps.
@@ -38,6 +38,8 @@ func main() {
     client := github.NewClient(&http.Client{Transport: itr})
 }
 ```
+
+You can also use [`New()`](https://pkg.go.dev/github.com/bradleyfalzon/ghinstallation/v2#New) to load a key directly from a `[]byte`.
 
 # GitHub Enterprise Example
 
@@ -83,10 +85,26 @@ WebHook request
   }
 ```
 
+# Customizing signing behavior
+
+Users can customize signing behavior by passing in a
+[Signer](https://pkg.go.dev/github.com/bradleyfalzon/ghinstallation/v2#Signer)
+implementation when creating an
+[AppsTransport](https://pkg.go.dev/github.com/bradleyfalzon/ghinstallation/v2#AppsTransport).
+For example, this can be used to create tokens backed by keys in a KMS system.
+
+```go
+signer := &myCustomSigner{
+  key: "https://url/to/key/vault",
+}
+atr := NewAppsTransportWithOptions(http.DefaultTransport, 1, WithSigner(signer))
+tr := NewFromAppsTransport(atr, 99)
+```
+
 # License
 
 [Apache 2.0](LICENSE)
 
 # Dependencies
 
--   [github.com/golang-jwt/jwt-go](https://github.com/golang-jwt/jwt-go)
+- [github.com/golang-jwt/jwt-go](https://github.com/golang-jwt/jwt-go)
