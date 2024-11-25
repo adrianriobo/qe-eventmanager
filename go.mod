@@ -10,7 +10,7 @@ require (
 	github.com/spf13/cobra v1.3.0
 	github.com/spf13/pflag v1.0.5
 	github.com/spf13/viper v1.10.0
-	github.com/spyzhov/ajson v0.6.0
+	github.com/spyzhov/ajson v0.9.6
 	github.com/tektoncd/pipeline v0.35.1
 	golang.org/x/exp v0.0.0-20231127185646-65229373498e
 	k8s.io/api v0.23.5
