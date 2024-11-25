@@ -41,15 +41,15 @@ const (
 	asterisk     byte = '*'
 	plus         byte = '+'
 	minus        byte = '-'
-	division     byte = '/'
-	exclamation  byte = '!'
-	caret        byte = '^'
-	signL        byte = '<'
-	signG        byte = '>'
-	signE        byte = '='
-	ampersand    byte = '&'
-	pipe         byte = '|'
-	question     byte = '?'
+	// division     byte = '/'
+	// exclamation  byte = '!'
+	// caret        byte = '^'
+	// signL        byte = '<'
+	// signG        byte = '>'
+	// signE        byte = '='
+	// ampersand    byte = '&'
+	// pipe         byte = '|'
+	question byte = '?'
 )
 
 type (
@@ -86,6 +86,23 @@ func (b *buffer) next() (c byte, err error) {
 		return 0, err
 	}
 	return b.data[b.index], nil
+}
+
+func (b *buffer) slice(delta int) ([]byte, error) {
+	if delta < 0 || b.index+delta > b.length {
+		return nil, io.EOF
+	}
+	return b.data[b.index : b.index+delta], nil
+}
+
+func (b *buffer) move(delta int) error {
+	if b.index+delta >= b.length {
+		return io.EOF
+	}
+	if b.index+delta >= 0 {
+		b.index += delta
+	}
+	return nil
 }
 
 func (b *buffer) reset() {
@@ -352,21 +369,13 @@ func (b *buffer) rpn() (result rpn, err error) {
 			break
 		}
 		switch true {
-		case c == asterisk || c == division || c == minus || c == plus || c == caret || c == ampersand || c == pipe || c == signL || c == signG || c == signE || c == exclamation: // operations
+		case priorityChar[c]: // operations
 			if variable {
 				variable = false
-				current = string(c)
+				current = b.operation()
 
-				c, err = b.next()
-				if err == nil {
-					temp = current + string(c)
-					if priority[temp] != 0 {
-						current = temp
-					} else {
-						b.index--
-					}
-				} else {
-					err = nil
+				if current == "" {
+					return nil, b.errorSymbol()
 				}
 
 				for len(stack) > 0 {
@@ -429,6 +438,7 @@ func (b *buffer) rpn() (result rpn, err error) {
 			current = string(b.data[start:b.index])
 			result = append(result, current)
 			if err != nil {
+				//nolint:ineffassign
 				err = nil
 			} else {
 				b.index--
@@ -511,7 +521,6 @@ func (b *buffer) tokenize() (result tokens, err error) {
 	var (
 		c        byte
 		start    int
-		temp     string
 		current  string
 		variable bool
 	)
@@ -525,18 +534,10 @@ func (b *buffer) tokenize() (result tokens, err error) {
 		case priorityChar[c]: // operations
 			if variable || (c != minus && c != plus) {
 				variable = false
-				current = string(c)
+				current = b.operation()
 
-				c, err = b.next()
-				if err == nil {
-					temp = current + string(c)
-					if priority[temp] != 0 {
-						current = temp
-					} else {
-						b.index--
-					}
-				} else {
-					err = nil
+				if current == "" {
+					return nil, b.errorSymbol()
 				}
 
 				result = append(result, current)
@@ -549,6 +550,7 @@ func (b *buffer) tokenize() (result tokens, err error) {
 			err = b.numeric(true)
 			if err != nil && err != io.EOF {
 				if c == dot {
+					//nolint:ineffassign
 					err = nil
 					result = append(result, ".")
 					b.index = start
@@ -582,6 +584,7 @@ func (b *buffer) tokenize() (result tokens, err error) {
 			current = string(b.data[start:b.index])
 			result = append(result, current)
 			if err != nil {
+				//nolint:ineffassign
 				err = nil
 			} else {
 				b.index--
@@ -612,6 +615,7 @@ func (b *buffer) tokenize() (result tokens, err error) {
 			if start == b.index {
 				err = b.step()
 				if err != nil {
+					//nolint:ineffassign
 					err = nil
 					current = strings.ToLower(string(b.data[start : b.index+1]))
 				} else {
@@ -635,6 +639,24 @@ func (b *buffer) tokenize() (result tokens, err error) {
 	}
 
 	return
+}
+
+func (b *buffer) operation() string {
+	current := ""
+
+	// Read the complete operation into the variable `current`: `+`, `!=`, `<=>`
+	// fixme: add additional order for comparison
+
+	for _, operation := range comparisonOperationsOrder() {
+		if bytes, ok := b.slice(len(operation)); ok == nil {
+			if string(bytes) == operation {
+				current = operation
+				_ = b.move(len(operation) - 1) // error can't occupy here because of b.slice result
+				break
+			}
+		}
+	}
+	return current
 }
 
 func (b *buffer) errorEOF() error {
