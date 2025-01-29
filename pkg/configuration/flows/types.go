@@ -21,11 +21,11 @@ type ACK struct {
 }
 
 type Action struct {
-	TektonPipeline TektonPipelineAction `yaml:"tektonPipeline,omitempty"`
-	Forward        ForwardAction        `yaml:"forward,omitempty"`
+	TektonPipeline PipelineAction `yaml:"pipeline,omitempty"`
+	Forward        ForwardAction  `yaml:"forward,omitempty"`
 }
 
-type TektonPipelineAction struct {
+type PipelineAction struct {
 	Name    string          `yaml:"name"`
 	Params  []NameValuePair `yaml:"params"`
 	Success Success         `yaml:"success,omitempty"`
