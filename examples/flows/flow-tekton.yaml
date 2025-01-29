@@ -6,7 +6,7 @@ input:
     - $.artifact.products[?(@.name=='value1')].name
     - $.artifact.products[?(@.name=='value2')].name
 action:
-  tektonPipeline:
+  pipeline:
     name: sample-pipeline
     params:
     - name: param1

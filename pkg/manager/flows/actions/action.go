@@ -14,7 +14,7 @@ type Runnable interface {
 }
 
 func CreateAction(flow flows.Flow) (Runnable, error) {
-	// if flow.Action.TektonPipelineAction != nil {
+	// if flow.Action.PipelineAction != nil {
 	if !util.IsEmpty(flow.Action.TektonPipeline) {
 		//Create the action
 		action, err := actionTekton.Create(flow.Action.TektonPipeline)

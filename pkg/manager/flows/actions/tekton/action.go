@@ -14,10 +14,10 @@ import (
 )
 
 type TektonAction struct {
-	actionInfo flows.TektonPipelineAction
+	actionInfo flows.PipelineAction
 }
 
-func Create(actionInfo flows.TektonPipelineAction) (*TektonAction, error) {
+func Create(actionInfo flows.PipelineAction) (*TektonAction, error) {
 	action := &TektonAction{actionInfo: actionInfo}
 	return action, nil
 }

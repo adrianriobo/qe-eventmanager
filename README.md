@@ -92,7 +92,7 @@ input:
         repo: sample-repo # Configured github providers require rights on this repo
         status: pending
 action:
-  tektonPipeline:
+  pipeline:
     name: XXX
     params:
     - name: foo
