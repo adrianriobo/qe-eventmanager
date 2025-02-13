@@ -13,9 +13,9 @@ require (
 	github.com/spyzhov/ajson v0.6.0
 	github.com/tektoncd/pipeline v0.35.1
 	golang.org/x/exp v0.0.0-20231127185646-65229373498e
-	k8s.io/api v0.23.5
-	k8s.io/apimachinery v0.23.5
-	k8s.io/client-go v0.23.5
+	k8s.io/api v0.32.2
+	k8s.io/apimachinery v0.32.2
+	k8s.io/client-go v0.32.2
 	k8s.io/utils v0.0.0-20231127182322-b307cd553661
 	knative.dev/pkg v0.0.0-20220329144915-0a1ec2e0d46c
 )
