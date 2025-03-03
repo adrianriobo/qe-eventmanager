@@ -4,7 +4,7 @@ import (
 	"crypto/tls"
 	"crypto/x509"
 
-	"github.com/adrianriobo/qe-eventmanager/pkg/util/logging"
+	"github.com/devtools-qe-incubator/eventmanager/pkg/util/logging"
 )
 
 func CreateTLSConfig(userCertificate, userKey, certificateAuthority []byte) (*tls.Config, error) {

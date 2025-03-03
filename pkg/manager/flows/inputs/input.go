@@ -1,11 +1,11 @@
 package inputs
 
 import (
-	"github.com/adrianriobo/qe-eventmanager/pkg/configuration/flows"
-	"github.com/adrianriobo/qe-eventmanager/pkg/manager/flows/actions"
-	inputACK "github.com/adrianriobo/qe-eventmanager/pkg/manager/flows/inputs/ack"
-	inputsUMB "github.com/adrianriobo/qe-eventmanager/pkg/manager/flows/inputs/umb"
-	"github.com/adrianriobo/qe-eventmanager/pkg/util"
+	"github.com/devtools-qe-incubator/eventmanager/pkg/configuration/flows"
+	"github.com/devtools-qe-incubator/eventmanager/pkg/manager/flows/actions"
+	inputACK "github.com/devtools-qe-incubator/eventmanager/pkg/manager/flows/inputs/ack"
+	inputsUMB "github.com/devtools-qe-incubator/eventmanager/pkg/manager/flows/inputs/umb"
+	"github.com/devtools-qe-incubator/eventmanager/pkg/util"
 )
 
 func AddActionToInput(flow flows.Flow, action actions.Runnable) error {

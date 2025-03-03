@@ -6,12 +6,12 @@ import (
 	"strings"
 	"sync"
 
-	"github.com/adrianriobo/qe-eventmanager/pkg/manager/status"
-	"github.com/adrianriobo/qe-eventmanager/pkg/services/messaging/umb/api"
-	"github.com/adrianriobo/qe-eventmanager/pkg/services/messaging/umb/impl/amqp"
-	"github.com/adrianriobo/qe-eventmanager/pkg/services/messaging/umb/impl/stomp"
-	"github.com/adrianriobo/qe-eventmanager/pkg/util"
-	"github.com/adrianriobo/qe-eventmanager/pkg/util/logging"
+	"github.com/devtools-qe-incubator/eventmanager/pkg/manager/status"
+	"github.com/devtools-qe-incubator/eventmanager/pkg/services/messaging/umb/api"
+	"github.com/devtools-qe-incubator/eventmanager/pkg/services/messaging/umb/impl/amqp"
+	"github.com/devtools-qe-incubator/eventmanager/pkg/services/messaging/umb/impl/stomp"
+	"github.com/devtools-qe-incubator/eventmanager/pkg/util"
+	"github.com/devtools-qe-incubator/eventmanager/pkg/util/logging"
 )
 
 const (

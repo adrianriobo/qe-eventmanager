@@ -5,9 +5,9 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/adrianriobo/qe-eventmanager/pkg/util"
-	"github.com/adrianriobo/qe-eventmanager/pkg/util/logging"
-	utilTekton "github.com/adrianriobo/qe-eventmanager/pkg/util/tekton"
+	"github.com/devtools-qe-incubator/eventmanager/pkg/util"
+	"github.com/devtools-qe-incubator/eventmanager/pkg/util/logging"
+	utilTekton "github.com/devtools-qe-incubator/eventmanager/pkg/util/tekton"
 	v1beta1 "github.com/tektoncd/pipeline/pkg/apis/pipeline/v1beta1"
 	clientset "github.com/tektoncd/pipeline/pkg/client/clientset/versioned"
 	informers "github.com/tektoncd/pipeline/pkg/client/informers/externalversions"
@@ -75,9 +75,9 @@ func ApplyPipelinerun(spec *v1beta1.PipelineRun) (*v1beta1.PipelineRun, error) {
 		Create(context.Background(), spec, v1.CreateOptions{})
 }
 
-// func(options *v1.ListOptions) {
-// 	options.FieldSelector = fields.OneTermEqualSelector("metadata.name", "app-config").String()
-// }
+//	func(options *v1.ListOptions) {
+//		options.FieldSelector = fields.OneTermEqualSelector("metadata.name", "app-config").String()
+//	}
 func AddInformer(pipelinerunName string, status chan *v1beta1.PipelineRunStatus, informerStopper chan struct{}) {
 	if err := checkInitialization(); err != nil {
 		logging.Error(err)

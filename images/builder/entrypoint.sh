@@ -17,7 +17,7 @@ if [ "${VALID_CONFIG}" = false ]; then
   exit 1
 fi
 
-# Run qe-eventmanager
-exec qe-eventmanager start \
+# Run eventmanager
+exec eventmanager start \
     --providers-filepath "${PROVIDERS_FILE_PATH}" \
     --flows-filepath "${FLOWS_FILE_PATH}"

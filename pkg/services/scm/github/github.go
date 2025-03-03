@@ -6,15 +6,15 @@ import (
 	"net/http"
 	"strconv"
 
-	"github.com/adrianriobo/qe-eventmanager/pkg/util/logging"
 	ghinstallation "github.com/bradleyfalzon/ghinstallation/v2"
+	"github.com/devtools-qe-incubator/eventmanager/pkg/util/logging"
 	"github.com/google/go-github/v45/github"
 	"golang.org/x/oauth2"
 )
 
 var (
 	defaultStatusDescription string = "Tested on downstream infrastructure"
-	defaultStatusContext     string = "qe-eventmanager"
+	defaultStatusContext     string = "eventmanager"
 )
 
 var _client *github.Client

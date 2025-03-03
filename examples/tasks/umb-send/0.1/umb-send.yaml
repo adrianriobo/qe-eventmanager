@@ -27,14 +27,14 @@ spec:
 
   steps:
   - name: umb-send
-    image: quay.io/ariobolo/qe-eventmanager:0.0.3
+    image: quay.io/ariobolo/eventmanager:0.0.3
     script: |
       #!/bin/bash 
       # Added verbosity
       set -xuo
 
       cat $(params.message) > /tmp/message.json
-      qe-eventmanager umb send \
+      eventmanager umb send \
                       -p /etc/eventmanager/providers.yaml \
                       -d $(params.topic) \
                       -m /tmp/message.json

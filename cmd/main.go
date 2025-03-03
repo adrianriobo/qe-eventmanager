@@ -1,6 +1,6 @@
 package main
 
-import "github.com/adrianriobo/qe-eventmanager/cmd/cmd"
+import "github.com/devtools-qe-incubator/eventmanager/cmd/cmd"
 
 func main() {
 	cmd.Execute()

@@ -3,13 +3,13 @@ package umb
 import (
 	"fmt"
 
-	"github.com/adrianriobo/qe-eventmanager/pkg/configuration/flows"
-	"github.com/adrianriobo/qe-eventmanager/pkg/manager/flows/actions"
-	"github.com/adrianriobo/qe-eventmanager/pkg/manager/flows/inputs/ack"
-	"github.com/adrianriobo/qe-eventmanager/pkg/services/messaging/umb"
-	"github.com/adrianriobo/qe-eventmanager/pkg/services/messaging/umb/api"
-	"github.com/adrianriobo/qe-eventmanager/pkg/util/json"
-	"github.com/adrianriobo/qe-eventmanager/pkg/util/logging"
+	"github.com/devtools-qe-incubator/eventmanager/pkg/configuration/flows"
+	"github.com/devtools-qe-incubator/eventmanager/pkg/manager/flows/actions"
+	"github.com/devtools-qe-incubator/eventmanager/pkg/manager/flows/inputs/ack"
+	"github.com/devtools-qe-incubator/eventmanager/pkg/services/messaging/umb"
+	"github.com/devtools-qe-incubator/eventmanager/pkg/services/messaging/umb/api"
+	"github.com/devtools-qe-incubator/eventmanager/pkg/util/json"
+	"github.com/devtools-qe-incubator/eventmanager/pkg/util/logging"
 )
 
 func Add(flowName string, input flows.UMBInput, ack ack.ACK, action actions.Runnable) error {

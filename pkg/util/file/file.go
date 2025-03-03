@@ -4,16 +4,18 @@ import (
 	"path/filepath"
 	"strings"
 
-	"github.com/adrianriobo/qe-eventmanager/pkg/util/logging"
+	"github.com/devtools-qe-incubator/eventmanager/pkg/util/logging"
 	"github.com/spf13/viper"
 )
 
 // TODO create separate PR to handle hot config changes
-// viper.OnConfigChange(func(e fsnotify.Event) {
-// 	fmt.Println("Config file changed:", e.Name)
-// 	// err = viper.Unmarshal(&umbConfig)
-// 	// send for channel to manage reload
-// })
+//
+//	viper.OnConfigChange(func(e fsnotify.Event) {
+//		fmt.Println("Config file changed:", e.Name)
+//		// err = viper.Unmarshal(&umbConfig)
+//		// send for channel to manage reload
+//	})
+//
 // viper.WatchConfig()
 // Extend to multiple files each one rule?
 func LoadFileAsStruct(filePath string, structured interface{}) error {

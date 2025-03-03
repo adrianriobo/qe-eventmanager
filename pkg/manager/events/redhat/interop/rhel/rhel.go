@@ -3,7 +3,7 @@ package rhel
 import (
 	"time"
 
-	"github.com/adrianriobo/qe-eventmanager/pkg/manager/events/redhat/interop"
+	"github.com/devtools-qe-incubator/eventmanager/pkg/manager/events/redhat/interop"
 )
 
 func CreateTestComplete(dahsboardURL, xunitURL,

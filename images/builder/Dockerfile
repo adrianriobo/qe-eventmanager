@@ -11,6 +11,6 @@ FROM registry.access.redhat.com/ubi8/ubi-minimal
 
 LABEL MAINTAINER "Adrian Riobo" "<ariobolo@redhat.com>"
 
-COPY --from=builder /workspace/out/qe-eventmanager /workspace/images/builder/entrypoint.sh /usr/local/bin/
+COPY --from=builder /workspace/out/eventmanager /workspace/images/builder/entrypoint.sh /usr/local/bin/
 
 ENTRYPOINT entrypoint.sh 

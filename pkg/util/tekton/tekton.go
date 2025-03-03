@@ -1,10 +1,10 @@
 package tekton
 
 import (
-	"github.com/adrianriobo/qe-eventmanager/pkg/util"
-	"github.com/adrianriobo/qe-eventmanager/pkg/util/http"
-	"github.com/adrianriobo/qe-eventmanager/pkg/util/logging"
-	"github.com/adrianriobo/qe-eventmanager/pkg/util/xunit"
+	"github.com/devtools-qe-incubator/eventmanager/pkg/util"
+	"github.com/devtools-qe-incubator/eventmanager/pkg/util/http"
+	"github.com/devtools-qe-incubator/eventmanager/pkg/util/logging"
+	"github.com/devtools-qe-incubator/eventmanager/pkg/util/xunit"
 	"github.com/tektoncd/pipeline/pkg/apis/pipeline/v1beta1"
 	"knative.dev/pkg/apis"
 )

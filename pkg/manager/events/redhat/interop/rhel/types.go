@@ -1,7 +1,7 @@
 package rhel
 
 import (
-	"github.com/adrianriobo/qe-eventmanager/pkg/manager/events/redhat/interop"
+	"github.com/devtools-qe-incubator/eventmanager/pkg/manager/events/redhat/interop"
 )
 
 type BuildComplete struct {

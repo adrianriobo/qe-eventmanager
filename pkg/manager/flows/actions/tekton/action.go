@@ -4,11 +4,11 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/adrianriobo/qe-eventmanager/pkg/configuration/flows"
-	"github.com/adrianriobo/qe-eventmanager/pkg/manager/flows/results"
-	tektonClient "github.com/adrianriobo/qe-eventmanager/pkg/services/cicd/tekton"
-	"github.com/adrianriobo/qe-eventmanager/pkg/util/json"
-	"github.com/adrianriobo/qe-eventmanager/pkg/util/logging"
+	"github.com/devtools-qe-incubator/eventmanager/pkg/configuration/flows"
+	"github.com/devtools-qe-incubator/eventmanager/pkg/manager/flows/results"
+	tektonClient "github.com/devtools-qe-incubator/eventmanager/pkg/services/cicd/tekton"
+	"github.com/devtools-qe-incubator/eventmanager/pkg/util/json"
+	"github.com/devtools-qe-incubator/eventmanager/pkg/util/logging"
 	"github.com/tektoncd/pipeline/pkg/apis/pipeline/v1beta1"
 	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
