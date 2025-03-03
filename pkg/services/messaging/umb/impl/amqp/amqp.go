@@ -6,9 +6,9 @@ import (
 	"time"
 
 	amqp "github.com/Azure/go-amqp"
-	"github.com/adrianriobo/qe-eventmanager/pkg/services/messaging/umb/api"
-	"github.com/adrianriobo/qe-eventmanager/pkg/util/logging"
-	"github.com/adrianriobo/qe-eventmanager/pkg/util/tls"
+	"github.com/devtools-qe-incubator/eventmanager/pkg/services/messaging/umb/api"
+	"github.com/devtools-qe-incubator/eventmanager/pkg/util/logging"
+	"github.com/devtools-qe-incubator/eventmanager/pkg/util/tls"
 )
 
 const (

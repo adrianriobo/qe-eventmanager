@@ -3,10 +3,10 @@ package actions
 import (
 	"fmt"
 
-	"github.com/adrianriobo/qe-eventmanager/pkg/configuration/flows"
-	actionForward "github.com/adrianriobo/qe-eventmanager/pkg/manager/flows/actions/forward"
-	actionTekton "github.com/adrianriobo/qe-eventmanager/pkg/manager/flows/actions/tekton"
-	"github.com/adrianriobo/qe-eventmanager/pkg/util"
+	"github.com/devtools-qe-incubator/eventmanager/pkg/configuration/flows"
+	actionForward "github.com/devtools-qe-incubator/eventmanager/pkg/manager/flows/actions/forward"
+	actionTekton "github.com/devtools-qe-incubator/eventmanager/pkg/manager/flows/actions/tekton"
+	"github.com/devtools-qe-incubator/eventmanager/pkg/util"
 )
 
 type Runnable interface {

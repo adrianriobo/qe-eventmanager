@@ -7,7 +7,7 @@ import (
 	"path/filepath"
 	"time"
 
-	"github.com/adrianriobo/qe-eventmanager/pkg/util"
+	"github.com/devtools-qe-incubator/eventmanager/pkg/util"
 	"github.com/sirupsen/logrus"
 )
 

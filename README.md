@@ -1,8 +1,8 @@
-# qe-eventmanager
+# eventmanager
 
 ![avatar](docs/diagrams/eventmanager.svg)
 
-[![Container Repository on Quay](https://quay.io/repository/ariobolo/qe-eventmanager/status "Container Repository on Quay")](https://quay.io/repository/ariobolo/qe-eventmanager)
+[![Container Repository on Quay](https://quay.io/repository/ariobolo/eventmanager/status "Container Repository on Quay")](https://quay.io/repository/ariobolo/eventmanager)
 
 ## Roles
 
@@ -15,7 +15,7 @@ As an actioner the cli allows to run single actions:
 * Send an UMB menssage
 
 ```bash
-./qe-eventmanager umb send -p providers.yaml \
+./eventmanager umb send -p providers.yaml \
                            -m message.json \
                            -d VirtualTopic.sample
 ```
@@ -23,7 +23,7 @@ As an actioner the cli allows to run single actions:
 * Create / update a repository status on github
 
 ```bash
-./qe-eventmanager github status -p providers.yaml \
+./eventmanager github status -p providers.yaml \
                            -s success \
                            -o sample-owner \
                            --repo sample-repo \
@@ -35,7 +35,7 @@ As an actioner the cli allows to run single actions:
 As a manager integrate providers based on flow definitnions:
 
 ```bash
-./qe-eventmanager start -p providers.yaml \
+./eventmanager start -p providers.yaml \
                         -f flow1.yaml,flow2.yaml
 ```
 

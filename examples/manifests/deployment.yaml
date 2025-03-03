@@ -17,7 +17,7 @@ spec:
     spec:
       containers:
       - name: manager
-        image: quay.io/ariobolo/qe-eventmanager:${VERSION}
+        image: quay.io/ariobolo/eventmanager:${VERSION}
         env:
         - name: PROVIDERS_FILE_PATH   
           value: /etc/eventmanager/providers.yaml

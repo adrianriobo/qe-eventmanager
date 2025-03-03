@@ -1,10 +1,10 @@
-PROJECT?=github.com/adrianriobo/qe-eventmanager
+PROJECT?=github.com/devtools-qe-incubator/eventmanager
 VERSION ?= 0.0.4
 COMMIT ?= $(shell git rev-parse --short HEAD)
 BUILD_TIME ?= $(shell date -u '+%Y-%m-%d_%H:%M:%S')
 CONTAINER_MANAGER ?= podman
 # Image URL to use all building/pushing image targets
-IMG ?= quay.io/ariobolo/qe-eventmanager:${VERSION}
+IMG ?= quay.io/devtools-qe-incubator/eventmanager:${VERSION}
 
 # Go and compilation related variables
 GOPATH ?= $(shell go env GOPATH)
@@ -33,17 +33,17 @@ check: build test lint
 install: $(SOURCES)
 	go install -ldflags="$(LDFLAGS)" $(GO_EXTRA_BUILDFLAGS) ./cmd
 
-$(BUILD_DIR)/qe-eventmanager: $(SOURCES)
+$(BUILD_DIR)/eventmanager: $(SOURCES)
 	GOOS=linux GOARCH=amd64 go build -gcflags="$(GCFLAGS)" -ldflags="$(LDFLAGS) \
 	-X ${PROJECT}/version.Version=${VERSION} \
 	-X ${PROJECT}/version.Commit=${COMMIT} \
 	-X ${PROJECT}/version.BuildTime=${BUILD_TIME}" \
-	-o $(BUILD_DIR)/qe-eventmanager $(GO_EXTRA_BUILDFLAGS) ./cmd
+	-o $(BUILD_DIR)/eventmanager $(GO_EXTRA_BUILDFLAGS) ./cmd
 
 
  
 .PHONY: build 
-build: $(BUILD_DIR)/qe-eventmanager
+build: $(BUILD_DIR)/eventmanager
 
 .PHONY: test
 test:
@@ -52,7 +52,7 @@ test:
 .PHONY: clean ## Remove all build artifacts
 clean:
 	rm -rf $(BUILD_DIR)
-	rm -f $(GOPATH)/bin/qe-eventmanager
+	rm -f $(GOPATH)/bin/eventmanager
 
 .PHONY: fmt
 fmt:

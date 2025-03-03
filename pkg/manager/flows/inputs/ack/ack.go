@@ -3,11 +3,11 @@ package ack
 import (
 	"strings"
 
-	"github.com/adrianriobo/qe-eventmanager/pkg/configuration/flows"
-	"github.com/adrianriobo/qe-eventmanager/pkg/services/scm/github"
-	"github.com/adrianriobo/qe-eventmanager/pkg/util"
-	"github.com/adrianriobo/qe-eventmanager/pkg/util/json"
-	"github.com/adrianriobo/qe-eventmanager/pkg/util/logging"
+	"github.com/devtools-qe-incubator/eventmanager/pkg/configuration/flows"
+	"github.com/devtools-qe-incubator/eventmanager/pkg/services/scm/github"
+	"github.com/devtools-qe-incubator/eventmanager/pkg/util"
+	"github.com/devtools-qe-incubator/eventmanager/pkg/util/json"
+	"github.com/devtools-qe-incubator/eventmanager/pkg/util/logging"
 )
 
 type ACK func(event []byte) error

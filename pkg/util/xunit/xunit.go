@@ -1,7 +1,7 @@
 package xunit
 
 import (
-	"github.com/adrianriobo/qe-eventmanager/pkg/util/logging"
+	"github.com/devtools-qe-incubator/eventmanager/pkg/util/logging"
 	"github.com/joshdk/go-junit"
 )
 

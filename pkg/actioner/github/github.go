@@ -4,10 +4,10 @@ import (
 	"fmt"
 	"os"
 
-	"github.com/adrianriobo/qe-eventmanager/pkg/configuration/providers"
-	"github.com/adrianriobo/qe-eventmanager/pkg/services/scm/github"
-	"github.com/adrianriobo/qe-eventmanager/pkg/util"
-	"github.com/adrianriobo/qe-eventmanager/pkg/util/logging"
+	"github.com/devtools-qe-incubator/eventmanager/pkg/configuration/providers"
+	"github.com/devtools-qe-incubator/eventmanager/pkg/services/scm/github"
+	"github.com/devtools-qe-incubator/eventmanager/pkg/util"
+	"github.com/devtools-qe-incubator/eventmanager/pkg/util/logging"
 )
 
 func CreateStatus(providersFilePath, ref, owner, repo,

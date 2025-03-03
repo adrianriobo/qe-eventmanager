@@ -1,7 +1,7 @@
 package cmd
 
 import (
-	"github.com/adrianriobo/qe-eventmanager/pkg/actioner/github"
+	"github.com/devtools-qe-incubator/eventmanager/pkg/actioner/github"
 	"github.com/spf13/cobra"
 	"github.com/spf13/pflag"
 	"github.com/spf13/viper"

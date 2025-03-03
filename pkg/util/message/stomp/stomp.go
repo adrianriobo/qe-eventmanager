@@ -6,8 +6,8 @@ import (
 	"errors"
 	"time"
 
-	"github.com/adrianriobo/qe-eventmanager/pkg/util/logging"
-	utilTLS "github.com/adrianriobo/qe-eventmanager/pkg/util/tls"
+	"github.com/devtools-qe-incubator/eventmanager/pkg/util/logging"
+	utilTLS "github.com/devtools-qe-incubator/eventmanager/pkg/util/tls"
 	"github.com/go-stomp/stomp/v3"
 	"github.com/go-stomp/stomp/v3/frame"
 )

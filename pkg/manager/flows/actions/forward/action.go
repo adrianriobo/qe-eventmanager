@@ -1,8 +1,8 @@
 package forward
 
 import (
-	"github.com/adrianriobo/qe-eventmanager/pkg/configuration/flows"
-	"github.com/adrianriobo/qe-eventmanager/pkg/util/logging"
+	"github.com/devtools-qe-incubator/eventmanager/pkg/configuration/flows"
+	"github.com/devtools-qe-incubator/eventmanager/pkg/util/logging"
 )
 
 type ForwardAction struct {

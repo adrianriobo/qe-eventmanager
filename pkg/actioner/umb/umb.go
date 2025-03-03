@@ -6,10 +6,10 @@ import (
 	"os"
 	"strings"
 
-	"github.com/adrianriobo/qe-eventmanager/pkg/configuration/providers"
-	"github.com/adrianriobo/qe-eventmanager/pkg/services/messaging/umb"
-	"github.com/adrianriobo/qe-eventmanager/pkg/util"
-	"github.com/adrianriobo/qe-eventmanager/pkg/util/logging"
+	"github.com/devtools-qe-incubator/eventmanager/pkg/configuration/providers"
+	"github.com/devtools-qe-incubator/eventmanager/pkg/services/messaging/umb"
+	"github.com/devtools-qe-incubator/eventmanager/pkg/util"
+	"github.com/devtools-qe-incubator/eventmanager/pkg/util/logging"
 )
 
 func Send(providersFilePath, destination, eventFilePath string) error {

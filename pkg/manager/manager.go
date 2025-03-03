@@ -8,18 +8,18 @@ import (
 	"strings"
 	"syscall"
 
-	"github.com/adrianriobo/qe-eventmanager/pkg/configuration/flows"
-	"github.com/adrianriobo/qe-eventmanager/pkg/configuration/providers"
-	"github.com/adrianriobo/qe-eventmanager/pkg/manager/flows/actions"
-	"github.com/adrianriobo/qe-eventmanager/pkg/manager/flows/inputs"
-	"github.com/adrianriobo/qe-eventmanager/pkg/manager/status"
+	"github.com/devtools-qe-incubator/eventmanager/pkg/configuration/flows"
+	"github.com/devtools-qe-incubator/eventmanager/pkg/configuration/providers"
+	"github.com/devtools-qe-incubator/eventmanager/pkg/manager/flows/actions"
+	"github.com/devtools-qe-incubator/eventmanager/pkg/manager/flows/inputs"
+	"github.com/devtools-qe-incubator/eventmanager/pkg/manager/status"
 
-	tektonClient "github.com/adrianriobo/qe-eventmanager/pkg/services/cicd/tekton"
-	"github.com/adrianriobo/qe-eventmanager/pkg/services/messaging/umb"
-	"github.com/adrianriobo/qe-eventmanager/pkg/services/scm/github"
-	"github.com/adrianriobo/qe-eventmanager/pkg/util"
-	"github.com/adrianriobo/qe-eventmanager/pkg/util/file"
-	"github.com/adrianriobo/qe-eventmanager/pkg/util/logging"
+	tektonClient "github.com/devtools-qe-incubator/eventmanager/pkg/services/cicd/tekton"
+	"github.com/devtools-qe-incubator/eventmanager/pkg/services/messaging/umb"
+	"github.com/devtools-qe-incubator/eventmanager/pkg/services/scm/github"
+	"github.com/devtools-qe-incubator/eventmanager/pkg/util"
+	"github.com/devtools-qe-incubator/eventmanager/pkg/util/file"
+	"github.com/devtools-qe-incubator/eventmanager/pkg/util/logging"
 )
 
 func Initialize(providersFilePath string, flowsFilePath []string) {

@@ -2,18 +2,18 @@
 apiVersion: v1
 kind: ServiceAccount
 metadata:
-  name: qe-eventmanager
+  name: eventmanager
   labels:
     app.kubernetes.io/component: rbac
-    app.kubernetes.io/part-of: qe-eventmanager
+    app.kubernetes.io/part-of: eventmanager
 ---
 kind: Role
 apiVersion: rbac.authorization.k8s.io/v1
 metadata:
-  name: qe-eventmanager
+  name: eventmanager
   labels:
     app.kubernetes.io/component: rbac
-    app.kubernetes.io/part-of: qe-eventmanager
+    app.kubernetes.io/part-of: eventmanager
 rules:
   - apiGroups: ["tekton.dev"]
     resources: ["tasks", "taskruns", "pipelines", "pipelineruns", "pipelineresources", "conditions"]
@@ -22,14 +22,14 @@ rules:
 apiVersion: rbac.authorization.k8s.io/v1
 kind: RoleBinding
 metadata:
-  name: qe-eventmanager
+  name: eventmanager
   labels:
     app.kubernetes.io/component: rbac
-    app.kubernetes.io/part-of: qe-eventmanager
+    app.kubernetes.io/part-of: eventmanager
 subjects:
 - kind: ServiceAccount
-  name: qe-eventmanager
+  name: eventmanager
 roleRef:
   kind: Role 
-  name: qe-eventmanager
+  name: eventmanager
   apiGroup: rbac.authorization.k8s.io

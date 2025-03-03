@@ -3,8 +3,8 @@ package providers
 import (
 	"encoding/base64"
 
-	"github.com/adrianriobo/qe-eventmanager/pkg/util/file"
-	"github.com/adrianriobo/qe-eventmanager/pkg/util/logging"
+	"github.com/devtools-qe-incubator/eventmanager/pkg/util/file"
+	"github.com/devtools-qe-incubator/eventmanager/pkg/util/logging"
 )
 
 func LoadFile(providersFilePath string) (*Providers, error) {

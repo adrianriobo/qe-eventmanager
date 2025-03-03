@@ -1,4 +1,4 @@
-module github.com/adrianriobo/qe-eventmanager
+module github.com/devtools-qe-incubator/eventmanager
 
 go 1.18
 

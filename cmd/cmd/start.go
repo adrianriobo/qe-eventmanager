@@ -7,7 +7,7 @@ import (
 	"github.com/spf13/pflag"
 	"github.com/spf13/viper"
 
-	"github.com/adrianriobo/qe-eventmanager/pkg/manager"
+	"github.com/devtools-qe-incubator/eventmanager/pkg/manager"
 )
 
 const (

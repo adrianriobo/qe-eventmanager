@@ -8,14 +8,14 @@ import (
 	"path/filepath"
 	"strings"
 
-	"github.com/adrianriobo/qe-eventmanager/pkg/util"
-	"github.com/adrianriobo/qe-eventmanager/pkg/util/logging"
+	"github.com/devtools-qe-incubator/eventmanager/pkg/util"
+	"github.com/devtools-qe-incubator/eventmanager/pkg/util/logging"
 	"github.com/spf13/cobra"
 	"k8s.io/utils/exec"
 )
 
 const (
-	commandName      = "qe-eventmanager"
+	commandName      = "eventmanager"
 	descriptionShort = "Eventing manager for qe"
 	descriptionLong  = "Act as an integration point for qe eventing"
 
@@ -23,8 +23,8 @@ const (
 )
 
 var (
-	baseDir = filepath.Join(util.GetHomeDir(), ".qe-eventmanager")
-	logFile = "qe-eventmanager.log"
+	baseDir = filepath.Join(util.GetHomeDir(), ".eventmanager")
+	logFile = "eventmanager.log"
 )
 
 var rootCmd = &cobra.Command{
